@@ -1,0 +1,7 @@
+# Eclipse project management
+*.metadata
+*.settings
+simplicity/Debug
+simplicity-demo/Debug
+simplicity-test/Debug
+
