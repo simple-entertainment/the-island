@@ -21,6 +21,7 @@
 
 #include "IslandFactory.h"
 #include "RockFactory.h"
+#include "TreeFactory.h"
 
 using namespace simplicity;
 using namespace std;
@@ -87,18 +88,28 @@ namespace theisland
 			ocean->addUniqueComponent(move(oceanModel));
 			Simplicity::addEntity(move(ocean));
 
-			// Rocks!
-			/////////////////////////
 			for (float x = 0; x < radius * 2 + 1; x++)
 			{
 				for (float z = 0; z < radius * 2 + 1; z++)
 				{
+					// Rocks!
+					/////////////////////////
 					if (MathFunctions::getRandomBool(0.025f))
 					{
 						unique_ptr<Entity> rock = RockFactory::createRock(MathFunctions::getRandomFloat(0.25f, 0.75f));
 						MathFunctions::setTranslation(rock->getTransformation(),
 								Vector3(x - radius, heightMap[x][z], z - radius));
 						Simplicity::addEntity(move(rock));
+					}
+
+					// Trees!
+					/////////////////////////
+					if (MathFunctions::getRandomBool(0.025f))
+					{
+						unique_ptr<Entity> tree = TreeFactory::createTree(MathFunctions::getRandomFloat(100.0f, 200.0f));
+						MathFunctions::setTranslation(tree->getTransformation(),
+								Vector3(x - radius, heightMap[x][z], z - radius));
+						Simplicity::addEntity(move(tree));
 					}
 				}
 			}
