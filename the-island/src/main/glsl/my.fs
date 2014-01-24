@@ -16,53 +16,55 @@ struct Light
 	float strength;
 };
 
-struct Surface
+struct VertexFS
 {
-    vec4 diffuse;
+	vec3 clipPosition;
+	vec4 colour;
 	vec3 normal;
-	vec3 position;
-    vec4 specular;
+	vec2 texCoord;
+	vec3 worldPosition;
 };
 
 // /////////////////////////
 // Functions
 // /////////////////////////
 
-vec4 applyDirectionalLight(Surface surface, Light light)
+vec4 applyDirectionalLight(VertexFS vertexFS, Light light, vec3 cameraPosition)
 {
-	vec4 litColour = vec4(0.0f, 0.0f, 0.0f, 1.0f);
-
 	// Add the ambient term.
-	litColour += surface.diffuse * light.ambient;        
+	vec4 colour = vertexFS.colour * light.ambient;
 
-	// Add diffuse and specular term, provided the surface is in 
-	// the line of site of the light.
-
-	float diffuseFactor = dot(-light.direction, surface.normal);
+	float diffuseFactor = dot(-light.direction, vertexFS.normal);
 	if(diffuseFactor > 0.0f)
 	{
-		//float specPower  = max(surface.specular.a, 1.0f);
-		//float3 toEye     = normalize(eyePos - surface.position);
-		//float3 R         = reflect(light.direction, surface.normal);
-		//float specFactor = pow(max(dot(R, toEye), 0.0f), specPower);
+		// Add the diffuse term.
+		colour += diffuseFactor * vertexFS.colour * light.diffuse;
 
-		// diffuse and specular terms
-		litColour += diffuseFactor * surface.diffuse * light.diffuse;
-		//litColour += specFactor * surface.specular * light.specular;
+		// Add the specular term.
+		vec3 toEye = normalize(cameraPosition - vertexFS.worldPosition);
+        vec3 lightReflect = normalize(reflect(light.direction, vertexFS.normal));
+        float specularFactor = dot(toEye, lightReflect);
+
+        specularFactor = pow(specularFactor, light.strength);
+        if (specularFactor > 0)
+        {
+            colour += specularFactor * light.specular;
+        }
 	}
 
-	return litColour;
+	return colour;
 }
 
 // /////////////////////////
 // Variables
 // /////////////////////////
 
-in Surface surface;
+in VertexFS vertexFS;
 
+uniform vec3 cameraPosition;
 uniform Light theOnlyLight;
 
-out vec4 finalColour;
+out vec4 colour;
 
 // /////////////////////////
 // Shader
@@ -70,5 +72,5 @@ out vec4 finalColour;
 
 void main()
 {
-	finalColour = applyDirectionalLight(surface, theOnlyLight);
+	colour = applyDirectionalLight(vertexFS, theOnlyLight, cameraPosition);
 }

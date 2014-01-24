@@ -19,6 +19,7 @@
 
 #include <simplicity/freeglut/windowing/FreeGLUTEngine.h>
 #include <simplicity/graph/SimpleTree.h>
+#include <simplicity/math/MathConstants.h>
 #include <simplicity/math/MathFunctions.h>
 #include <simplicity/math/Vector.h>
 #include <simplicity/opengl/model/OpenGLModelFactory.h>
@@ -74,6 +75,7 @@ int main(int argc, char** argv)
 	// Camera
 	unique_ptr<Entity> cameraEntity(new Entity);
 	MathFunctions::setTranslation(cameraEntity->getTransformation(), Vector4(0.0f, 100.0f, 100.0f, 1.0f));
+	MathFunctions::rotate(cameraEntity->getTransformation(), MathConstants::PI * -0.25f, Vector4(1.0f, 0.0f, 0.0f, 1.0f));
 	unique_ptr<Camera> camera(new OpenGLCamera);
 	camera->setPerspective(60.0f, 4.0f / 3.0f);
 	cameraEntity->addUniqueComponent(move(camera));
@@ -86,7 +88,9 @@ int main(int argc, char** argv)
 	unique_ptr<Light> light(new OpenGLLight("theOnly"));
 	light->setAmbientComponent(Vector4(0.7f, 0.7f, 0.7f, 1.0f));
 	light->setDiffuseComponent(Vector4(0.7f, 0.7f, 0.7f, 1.0f));
+	light->setSpecularComponent(Vector4(0.7f, 0.7f, 0.7f, 1.0f));
 	light->setDirection(Vector3(0.0f, -1.0f, 0.0f));
+	light->setStrength(32.0f);
 
 	renderingEngine->addLight(move(light));
 	renderingEngine->addRenderer(move(renderer));
@@ -103,10 +107,33 @@ int main(int argc, char** argv)
 	float peakHeight = 32.0f;
 	for (unsigned int index = 0; index < radius * 2; index++)
 	{
-		profile.push_back(peakHeight - sinf(index / 10.0f) * 10.0f);
+		// Drop below sea level outside of the radius.
+		if (index > radius)
+		{
+			profile.push_back((float) radius - index);
+			continue;
+		}
+
+		// The cone.
+		//profile.push_back(peakHeight - index * (peakHeight / radius));
+
+		// The bagel.
+		//profile.push_back(peakHeight * ((sinf(index / 5.5f) + 1.0f) / 4.0f));
+
+		// Mountains and beaches.
+		profile.push_back(peakHeight * (pow(radius - index, 3) / pow(radius, 3)));
 	}
 	unique_ptr<Entity> island = IslandFactory::createIsland(radius, profile);
 	Simplicity::addEntity(move(island));
+
+	// The Ocean!
+	/////////////////////////
+	unique_ptr<Entity> ocean(new Entity);
+	MathFunctions::rotate(ocean->getTransformation(), MathConstants::PI * 0.5f, Vector4(1.0f, 0.0f, 0.0f, 1.0f));
+	unique_ptr<Model> oceanModel =
+			ModelFactory::getInstance().createSquareMesh(500.0f, Vector4(0.0f, 0.4f, 0.6f, 1.0f), false);
+	ocean->addUniqueComponent(move(oceanModel));
+	Simplicity::addEntity(move(ocean));
 
 	// GO!
 	/////////////////////////

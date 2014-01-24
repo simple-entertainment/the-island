@@ -4,15 +4,7 @@
 // Structures
 // /////////////////////////
 
-struct Surface
-{
-    vec4 diffuse;
-	vec3 normal;
-	vec3 position;
-    vec4 specular;
-};
-
-struct Vertex
+struct VertexVS
 {
 	vec4 colour;
 	vec3 normal;
@@ -20,16 +12,25 @@ struct Vertex
 	vec2 texCoord;
 };
 
+struct VertexFS
+{
+	vec3 clipPosition;
+	vec4 colour;
+	vec3 normal;
+	vec2 texCoord;
+	vec3 worldPosition;
+};
+
 // /////////////////////////
 // Variables
 // /////////////////////////
 
-layout (location = 0) in Vertex vertex;
+layout (location = 0) in VertexVS vertexVS;
 
 uniform mat4 cameraTransformation;
 uniform mat4 worldTransformation;
 
-out Surface surface;
+out VertexFS vertexFS;
 
 // /////////////////////////
 // Shader
@@ -37,8 +38,14 @@ out Surface surface;
 
 void main()
 {
-	surface.diffuse = vertex.colour;
-	surface.normal = vertex.normal;
+	vec4 worldPosition4 = worldTransformation * vec4(vertexVS.position, 1.0);
+	vec4 clipPosition4 = cameraTransformation * worldTransformation * vec4(vertexVS.position, 1.0);
 
-	gl_Position = cameraTransformation * worldTransformation * vec4(vertex.position, 1.0);
+	vertexFS.clipPosition = clipPosition4.xyz;
+	vertexFS.colour = vertexVS.colour;
+	vertexFS.normal = vertexVS.normal;
+	vertexFS.texCoord = vertexVS.texCoord;
+	vertexFS.worldPosition = worldPosition4.xyz;
+
+	gl_Position = clipPosition4;
 }
