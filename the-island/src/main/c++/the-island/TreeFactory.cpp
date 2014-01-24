@@ -69,10 +69,15 @@ namespace theisland
 
 				center.Z() -= segmentHeight;
 
-				segmentHeight -= segmentHeightDelta;
-				segmentRadius -= segmentRadiusDelta;
+				if (segment != segments - 1)
+				{
+					center.X() += MathFunctions::getRandomFloat(-segmentRadius, segmentRadius);
+					center.Y() += MathFunctions::getRandomFloat(-segmentRadius, segmentRadius);
+
+					segmentHeight -= segmentHeightDelta;
+					segmentRadius -= segmentRadiusDelta;
+				}
 			}
-			segmentRadius += segmentRadiusDelta; // So that the top fits :)
 
 			// Trunk Top
 			ModelFactory::addCircleVertexList(vertices, verticesInTrunkSegments, segmentRadius, segmentDivisions,

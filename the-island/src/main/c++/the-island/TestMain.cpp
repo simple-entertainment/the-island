@@ -32,6 +32,7 @@
 #include <simplicity/Simplicity.h>
 
 #include "IslandFactory.h"
+#include "TreeFactory.h"
 
 using namespace simplicity;
 using namespace simplicity::freeglut;
@@ -74,8 +75,7 @@ int main(int argc, char** argv)
 
 	// Camera
 	unique_ptr<Entity> cameraEntity(new Entity);
-	MathFunctions::setTranslation(cameraEntity->getTransformation(), Vector4(0.0f, 100.0f, 100.0f, 1.0f));
-	MathFunctions::rotate(cameraEntity->getTransformation(), MathConstants::PI * -0.25f, Vector4(1.0f, 0.0f, 0.0f, 1.0f));
+	MathFunctions::setTranslation(cameraEntity->getTransformation(), Vector3(0.0f, 20.0f, 120.0f));
 	unique_ptr<Camera> camera(new OpenGLCamera);
 	camera->setPerspective(60.0f, 4.0f / 3.0f);
 	cameraEntity->addUniqueComponent(move(camera));
@@ -95,7 +95,7 @@ int main(int argc, char** argv)
 	renderingEngine->addLight(move(light));
 	renderingEngine->addRenderer(move(renderer));
 	renderingEngine->setCamera(move(cameraEntity));
-	renderingEngine->setClearingColour(Vector4(0.0f, 0.0f, 0.75f, 1.0f));
+	renderingEngine->setClearingColour(Vector4(0.0f, 0.5f, 0.75f, 1.0f));
 	renderingEngine->setGraph(rawWorld);
 	Simplicity::addEngine(move(renderingEngine));
 
@@ -125,6 +125,14 @@ int main(int argc, char** argv)
 	}
 	unique_ptr<Entity> island = IslandFactory::createIsland(radius, profile);
 	Simplicity::addEntity(move(island));
+
+	/*unique_ptr<Entity> test(new Entity);
+	unique_ptr<Model> testModel =
+			ModelFactory::getInstance().createCylinderMesh(5.0f, 10.0f, 10, Vector4(1.0f, 0.0f, 0.0f, 1.0f));
+	test->addUniqueComponent(move(testModel));*/
+	unique_ptr<Entity> test = TreeFactory::createTree(100.0f);
+	MathFunctions::setTranslation(test->getTransformation(), Vector3(0.0f, 100.0f, 80.0f));
+	Simplicity::addEntity(move(test));
 
 	// GO!
 	/////////////////////////
