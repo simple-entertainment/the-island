@@ -51,19 +51,19 @@ void main()
 	if (vertexFS.colour == vec4(0.0, 0.5, 0.0, 1.0))
 	{
 		vec3 up = vec3(0.0, 1.0, 0.0);
-		
-		// Cliffs!
-		if (abs(dot(vertexFS.normal, up)) < 0.2f)
-		{
-			vertexFS.colour = vec4(0.6, 0.6, 0.6, 1.0);
-		}
-		
+
 		// Beaches!
 		if (abs(dot(vertexFS.normal, up)) > 0.5f && vertexFS.worldPosition.y < 0.5f)
 		{
 			vertexFS.colour = vec4(0.83, 0.65, 0.15, 1.0);
 		}
-		
+
+		// Cliffs!
+		if (abs(dot(vertexFS.normal, up)) < 0.2f)
+		{
+			vertexFS.colour = vec4(0.6, 0.6, 0.6, 1.0);
+		}
+
 		// Snow!
 		if (vertexFS.worldPosition.y > 20.0f)
 		{

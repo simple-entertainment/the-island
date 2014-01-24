@@ -14,11 +14,13 @@
  * You should have received a copy of the GNU General Public License along with The Island. If not, see
  * <http://www.gnu.org/licenses/>.
  */
-#include <simplicity/Component.h>
+#include <simplicity/math/MathConstants.h>
 #include <simplicity/math/MathFunctions.h>
 #include <simplicity/model/ModelFactory.h>
+#include <simplicity/Simplicity.h>
 
 #include "IslandFactory.h"
+#include "RockFactory.h"
 
 using namespace simplicity;
 using namespace std;
@@ -56,6 +58,10 @@ namespace theisland
 
 		unique_ptr<Entity> createIsland(unsigned int radius, const vector<float>& profile)
 		{
+			unique_ptr<Entity> island(new Entity);
+
+			// The Island!
+			/////////////////////////
 			vector<vector<float>> heightMap;
 			vector<vector<float>> slopeMap;
 			initializeMaps(heightMap, slopeMap, radius * 2 + 1);
@@ -70,8 +76,32 @@ namespace theisland
 			unique_ptr<Model> mesh = ModelFactory::getInstance().createHeightMapMesh(heightMap,
 					Vector4(0.0f, 0.5f, 0.0f, 1.0f));
 
-			unique_ptr<Entity> island(new Entity);
 			island->addUniqueComponent(move(mesh));
+
+			// The Ocean!
+			/////////////////////////
+			unique_ptr<Entity> ocean(new Entity);
+			MathFunctions::rotate(ocean->getTransformation(), MathConstants::PI * 0.5f, Vector4(1.0f, 0.0f, 0.0f, 1.0f));
+			unique_ptr<Model> oceanModel =
+					ModelFactory::getInstance().createSquareMesh(500.0f, Vector4(0.0f, 0.4f, 0.6f, 1.0f), false);
+			ocean->addUniqueComponent(move(oceanModel));
+			Simplicity::addEntity(move(ocean));
+
+			// Rocks!
+			/////////////////////////
+			for (float x = 0; x < radius * 2 + 1; x++)
+			{
+				for (float z = 0; z < radius * 2 + 1; z++)
+				{
+					if (MathFunctions::getRandomBool(0.025f))
+					{
+						unique_ptr<Entity> rock = RockFactory::createRock(MathFunctions::getRandomFloat(0.25f, 0.75f));
+						MathFunctions::setTranslation(rock->getTransformation(),
+								Vector3(x - radius, heightMap[x][z], z - radius));
+						Simplicity::addEntity(move(rock));
+					}
+				}
+			}
 
 			return move(island);
 		}

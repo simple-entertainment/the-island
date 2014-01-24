@@ -126,15 +126,6 @@ int main(int argc, char** argv)
 	unique_ptr<Entity> island = IslandFactory::createIsland(radius, profile);
 	Simplicity::addEntity(move(island));
 
-	// The Ocean!
-	/////////////////////////
-	unique_ptr<Entity> ocean(new Entity);
-	MathFunctions::rotate(ocean->getTransformation(), MathConstants::PI * 0.5f, Vector4(1.0f, 0.0f, 0.0f, 1.0f));
-	unique_ptr<Model> oceanModel =
-			ModelFactory::getInstance().createSquareMesh(500.0f, Vector4(0.0f, 0.4f, 0.6f, 1.0f), false);
-	ocean->addUniqueComponent(move(oceanModel));
-	Simplicity::addEntity(move(ocean));
-
 	// GO!
 	/////////////////////////
 	Simplicity::play();
