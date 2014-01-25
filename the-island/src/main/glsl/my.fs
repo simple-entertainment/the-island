@@ -46,13 +46,37 @@ vec4 applyDirectionalLight(VertexFS vertexFS, Light light, vec3 cameraPosition)
         float specularFactor = dot(toEye, lightReflect);
 
         specularFactor = pow(specularFactor, light.strength);
-        if (specularFactor > 0)
+        if (specularFactor > 0.0f)
         {
             colour += specularFactor * light.specular;
         }
 	}
 
 	return colour;
+}
+
+float getRandomFloat(vec2 seed)
+{
+    return fract(sin(dot(seed.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
+
+float getRandomFloatZeroToOne(vec2 seed)
+{
+	float random = getRandomFloat(seed);
+	random = abs(random);
+    return random - floor(random);
+}
+
+bool isGrain(vec3 position, float grainId, float granularity, float probability)
+{
+	vec2 seed = vec2(int((position.x + grainId) * granularity), int((position.z + grainId) * granularity));
+
+    return getRandomFloatZeroToOne(seed) < probability;
+}
+
+bool near(float a, float b)
+{
+	return abs(a - b) < 0.0001f;
 }
 
 // /////////////////////////
@@ -72,5 +96,20 @@ out vec4 colour;
 
 void main()
 {
-	colour = applyDirectionalLight(vertexFS, theOnlyLight, cameraPosition);
+	VertexFS vertexFS2 = vertexFS;
+
+	// Sand shader.
+	if (near(vertexFS.colour.x, 0.83f) && near(vertexFS.colour.y, 0.65f) && near(vertexFS.colour.z, 0.15f))
+	{
+		if (isGrain(vertexFS.worldPosition.xyz, 0.0f, 100.0f, 0.3f))
+		{
+			vertexFS2.colour = vec4(0.72f, 0.44f, 0.04f, 1.0f);
+		}
+		else if (isGrain(vertexFS.worldPosition.xyz, 1.0f, 100.0f, 0.3f))
+		{
+			vertexFS2.colour = vec4(0.6f, 0.6f, 0.6f, 1.0f);
+		}
+	}
+
+	colour = applyDirectionalLight(vertexFS2, theOnlyLight, cameraPosition);
 }

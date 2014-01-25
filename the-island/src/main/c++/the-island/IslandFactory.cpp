@@ -41,6 +41,7 @@ namespace theisland
 		void getTraversalIndices(unsigned int radius, unsigned int currentRadius, string axis, int direction,
 				unsigned int& beginIndexX, unsigned int& endIndexX, unsigned int& beginIndexZ, unsigned int& endIndexZ);
 		void initializeMaps(vector<vector<float>>& heightMap, vector<vector<float>>& slopeMap, unsigned int edgeLength);
+		void setColour(Vertex& vertex);
 		void setHeight(unsigned int radius, const vector<float>& profile, unsigned int x, unsigned int z,
 				vector<vector<float>>& heightMap, vector<vector<float>>& slopeMap, float heightFactor,
 				float slopeFactor);
@@ -74,8 +75,13 @@ namespace theisland
 			fillHeightMapSector(radius, profile, heightMap, slopeMap, "z", -1);
 			fillHeightMapSector(radius, profile, heightMap, slopeMap, "z", 1);
 
-			unique_ptr<Model> mesh = ModelFactory::getInstance().createHeightMapMesh(heightMap,
+			unique_ptr<Mesh> mesh = ModelFactory::getInstance().createHeightMapMesh(heightMap,
 					Vector4(0.0f, 0.5f, 0.0f, 1.0f));
+
+			for (Vertex& vertex : mesh->getVertices())
+			{
+				setColour(vertex);
+			}
 
 			island->addUniqueComponent(move(mesh));
 
@@ -92,6 +98,11 @@ namespace theisland
 			{
 				for (float z = 0; z < radius * 2 + 1; z++)
 				{
+					if (heightMap[x][z] <= 0.0f)
+					{
+						continue;
+					}
+
 					// Rocks!
 					/////////////////////////
 					if (MathFunctions::getRandomBool(0.025f))
@@ -102,13 +113,18 @@ namespace theisland
 						Simplicity::addEntity(move(rock));
 					}
 
+					if (slopeMap[x][z] > 1.0f)
+					{
+						continue;
+					}
+
 					// Trees!
 					/////////////////////////
 					if (MathFunctions::getRandomBool(0.025f))
 					{
 						unique_ptr<Entity> tree = TreeFactory::createTree(MathFunctions::getRandomFloat(100.0f, 200.0f));
 						MathFunctions::setTranslation(tree->getTransformation(),
-								Vector3(x - radius, heightMap[x][z], z - radius));
+								Vector3(x - radius, heightMap[x][z] - 0.1f, z - radius));
 						Simplicity::addEntity(move(tree));
 					}
 				}
@@ -277,6 +293,30 @@ namespace theisland
 					heightMap[x].push_back(0.0f);
 					slopeMap[x].push_back(0.0f);
 				}
+			}
+		}
+
+		void setColour(Vertex& vertex)
+		{
+			Vector3 up(0.0, 1.0, 0.0);
+
+			// Beaches!
+			if ((abs(dotProduct(vertex.normal, up)) > 0.5f && vertex.position.Y() < 0.5f)
+					|| vertex.position.Y() < 0.0f)
+			{
+				vertex.color = Vector4(0.83f, 0.65f, 0.15f, 1.0f);
+			}
+
+			// Cliffs!
+			if (abs(dotProduct(vertex.normal, up)) < 0.2f)
+			{
+				vertex.color = Vector4(0.6f, 0.6f, 0.6f, 1.0f);
+			}
+
+			// Snow!
+			if (vertex.position.Y() > 20.0f)
+			{
+				vertex.color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 			}
 		}
 
