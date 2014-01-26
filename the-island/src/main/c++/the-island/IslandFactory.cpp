@@ -30,7 +30,7 @@ namespace theisland
 {
 	namespace IslandFactory
 	{
-		void addDetail(Vertex& vertex0, Vertex& vertex1, Vertex& vertex2);
+		void addDetail(vector<Vertex>& vertices, unsigned int index);
 		unsigned int adjustIndex(unsigned int index, int adjustment, string adjustmentAxis, string axis, int direction);
 		void fillHeightMapSector(unsigned int radius, const vector<float>& profile, vector<vector<float>>& heightMap,
 				vector<vector<float>>& slopeMap, string axis, int direction);
@@ -41,24 +41,27 @@ namespace theisland
 				unsigned int endIndex, float& heightFactor, float& slopeFactor);
 		void getTraversalIndices(unsigned int radius, unsigned int currentRadius, string axis, int direction,
 				unsigned int& beginIndexX, unsigned int& endIndexX, unsigned int& beginIndexZ, unsigned int& endIndexZ);
-		void growGrass(const Vector3& position0, const Vector3& position1, const Vector3& position2);
-		void growTree(const Vector3& position0, const Vector3& position1, const Vector3& position2);
+		void growGrass(const vector<Vertex>& vertices, unsigned int index);
+		void growTree(const vector<Vertex>& vertices, unsigned int index);
 		void initializeMaps(vector<vector<float>>& heightMap, vector<vector<float>>& slopeMap, unsigned int edgeLength);
 		void setHeight(unsigned int radius, const vector<float>& profile, unsigned int x, unsigned int z,
 				vector<vector<float>>& heightMap, vector<vector<float>>& slopeMap, float heightFactor,
 				float slopeFactor);
+		void smoothen(vector<Vertex>& vertices, unsigned int index);
+		Vector3 getSmoothNormal(const vector<Vertex>& vertices, unsigned int x, unsigned int z);
 
-		void addDetail(Vertex& vertex0, Vertex& vertex1, Vertex& vertex2)
+		void addDetail(vector<Vertex>& vertices, unsigned int index)
 		{
 			Vector3 up(0.0, 1.0, 0.0);
-			float maxY = max(vertex0.position.Y(), max(vertex1.position.Y(), vertex2.position.Y()));
+			float maxY = max(vertices[index].position.Y(), max(vertices[index + 1].position.Y(),
+					vertices[index + 2].position.Y()));
 
 			// Cliffs!
-			if (abs(dotProduct(vertex0.normal, up)) < 0.2f)
+			if (abs(dotProduct(vertices[index].normal, up)) < 0.2f)
 			{
-				vertex0.color = Vector4(0.6f, 0.6f, 0.6f, 1.0f);
-				vertex1.color = Vector4(0.6f, 0.6f, 0.6f, 1.0f);
-				vertex2.color = Vector4(0.6f, 0.6f, 0.6f, 1.0f);
+				vertices[index].color = Vector4(0.6f, 0.6f, 0.6f, 1.0f);
+				vertices[index + 1].color = Vector4(0.6f, 0.6f, 0.6f, 1.0f);
+				vertices[index + 2].color = Vector4(0.6f, 0.6f, 0.6f, 1.0f);
 
 				return;
 			}
@@ -66,32 +69,38 @@ namespace theisland
 			// Snow!
 			if (maxY > 20.0f)
 			{
-				vertex0.color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-				vertex1.color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-				vertex2.color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+				vertices[index].color = Vector4(0.9f, 0.9f, 0.9f, 1.0f);
+				vertices[index + 1].color = Vector4(0.9f, 0.9f, 0.9f, 1.0f);
+				vertices[index + 2].color = Vector4(0.9f, 0.9f, 0.9f, 1.0f);
+
+				smoothen(vertices, index);
 
 				return;
 			}
 
 			// Beaches!
-			if ((abs(dotProduct(vertex0.normal, up)) > 0.5f && maxY < 0.5f) ||
+			if ((abs(dotProduct(vertices[index].normal, up)) > 0.5f && maxY < 0.5f) ||
 					maxY < 0.0f)
 			{
-				vertex0.color = Vector4(0.83f, 0.65f, 0.15f, 1.0f);
-				vertex1.color = Vector4(0.83f, 0.65f, 0.15f, 1.0f);
-				vertex2.color = Vector4(0.83f, 0.65f, 0.15f, 1.0f);
+				vertices[index].color = Vector4(0.83f, 0.65f, 0.15f, 1.0f);
+				vertices[index + 1].color = Vector4(0.83f, 0.65f, 0.15f, 1.0f);
+				vertices[index + 2].color = Vector4(0.83f, 0.65f, 0.15f, 1.0f);
+
+				smoothen(vertices, index);
 
 				return;
 			}
 
 			// Grass!
-			growGrass(vertex0.position, vertex1.position, vertex2.position);
+			growGrass(vertices, index);
 
 			// Trees!
 			if (MathFunctions::getRandomBool(0.025f))
 			{
-				growTree(vertex0.position, vertex1.position, vertex2.position);
+				growTree(vertices, index);
 			}
+
+			smoothen(vertices, index);
 		}
 
 		unsigned int adjustIndex(unsigned int index, int adjustment, string adjustmentAxis, string axis, int direction)
@@ -128,7 +137,7 @@ namespace theisland
 
 			for (unsigned int index = 0; index < mesh->getVertices().size(); index += 3)
 			{
-				addDetail(mesh->getVertices()[index], mesh->getVertices()[index + 1], mesh->getVertices()[index + 2]);
+				addDetail(mesh->getVertices(), index);
 			}
 
 			island->addUniqueComponent(move(mesh));
@@ -269,6 +278,93 @@ namespace theisland
 			}
 		}
 
+		Vector3 getSmoothNormal(const vector<Vertex>& vertices, unsigned int x, unsigned int z)
+		{
+			unsigned int verticesPerGridElement = 6;
+			unsigned int edgeLength = sqrt(vertices.size() / verticesPerGridElement);
+			unsigned int gridElement = x * edgeLength + z;
+
+			Vector3 normal(0.0f, 0.0f, 0.0f);
+
+			if (x > 0 && z > 0)
+			{
+				unsigned int frontLeftGridElement = gridElement - edgeLength - 1;
+
+				unsigned int p0 = frontLeftGridElement * verticesPerGridElement;
+				unsigned int p1 = frontLeftGridElement * verticesPerGridElement + 1;
+				unsigned int p2 = frontLeftGridElement * verticesPerGridElement + 2;
+				unsigned int p3 = frontLeftGridElement * verticesPerGridElement + 5;
+
+				Vector3 edge0 = vertices[p1].position - vertices[p0].position;
+				edge0.normalize();
+				Vector3 edge1 = vertices[p2].position - vertices[p0].position;
+				edge1.normalize();
+				normal += MathFunctions::crossProduct(edge0, edge1);
+
+				Vector3 edge2 = vertices[p2].position - vertices[p0].position;
+				edge2.normalize();
+				Vector3 edge3 = vertices[p3].position - vertices[p0].position;
+				edge3.normalize();
+				normal += MathFunctions::crossProduct(edge2, edge3);
+			}
+
+			if (x > 0 && z < edgeLength)
+			{
+				unsigned int backLeftGridElement = gridElement - edgeLength;
+
+				unsigned int p0 = backLeftGridElement * verticesPerGridElement;
+				unsigned int p2 = backLeftGridElement * verticesPerGridElement + 2;
+				unsigned int p3 = backLeftGridElement * verticesPerGridElement + 5;
+
+				Vector3 edge2 = vertices[p2].position - vertices[p0].position;
+				edge2.normalize();
+				Vector3 edge3 = vertices[p3].position - vertices[p0].position;
+				edge3.normalize();
+				normal += MathFunctions::crossProduct(edge2, edge3);
+			}
+
+			if (z > 0 && x < edgeLength)
+			{
+				unsigned int frontRightGridElement = gridElement - 1;
+
+				unsigned int p0 = frontRightGridElement * verticesPerGridElement;
+				unsigned int p1 = frontRightGridElement * verticesPerGridElement + 1;
+				unsigned int p2 = frontRightGridElement * verticesPerGridElement + 2;
+
+				Vector3 edge0 = vertices[p1].position - vertices[p0].position;
+				edge0.normalize();
+				Vector3 edge1 = vertices[p2].position - vertices[p0].position;
+				edge1.normalize();
+				normal += MathFunctions::crossProduct(edge0, edge1);
+			}
+
+			if (x < edgeLength && z < edgeLength)
+			{
+				unsigned int backRightGridElement = gridElement;
+
+				unsigned int p0 = backRightGridElement * verticesPerGridElement;
+				unsigned int p1 = backRightGridElement * verticesPerGridElement + 1;
+				unsigned int p2 = backRightGridElement * verticesPerGridElement + 2;
+				unsigned int p3 = backRightGridElement * verticesPerGridElement + 5;
+
+				Vector3 edge0 = vertices[p1].position - vertices[p0].position;
+				edge0.normalize();
+				Vector3 edge1 = vertices[p2].position - vertices[p0].position;
+				edge1.normalize();
+				normal += MathFunctions::crossProduct(edge0, edge1);
+
+				Vector3 edge2 = vertices[p2].position - vertices[p0].position;
+				edge2.normalize();
+				Vector3 edge3 = vertices[p3].position - vertices[p0].position;
+				edge3.normalize();
+				normal += MathFunctions::crossProduct(edge2, edge3);
+			}
+
+			normal.normalize();
+
+			return normal;
+		}
+
 		void getTraversalIndices(unsigned int radius, unsigned int currentRadius, string axis, int direction,
 				unsigned int& beginIndexX, unsigned int& endIndexX, unsigned int& beginIndexZ, unsigned int& endIndexZ)
 		{
@@ -310,27 +406,24 @@ namespace theisland
 			}
 		}
 
-		void growGrass(const Vector3& position0, const Vector3& position1, const Vector3& position2)
+		void growGrass(const vector<Vertex>& vertices, unsigned int index)
 		{
 			unique_ptr<Entity> grass(new Entity);
 
-			unsigned int blades = 20;
 			float averageBladeHeight = 0.5f;
-			vector<Vertex> vertices(blades * 3);
-			vector<unsigned int> indices(blades * 6);
+			unsigned int blades = 20;
+			vector<Vertex> bladeVertices(blades * 3);
+			vector<unsigned int> bladeIndices(blades * 6);
 
-			Vector3 center = (position0 + position1 + position2) / 3.0f;
-			Vector3 corners[3];
-			corners[0] = position0;
-			corners[1] = position1;
-			corners[2] = position2;
+			Vector3 center = (vertices[index].position + vertices[index + 1].position + vertices[index + 2].position) /
+					3.0f;
 
 			for (unsigned int blade = 0; blade < blades; blade++)
 			{
 				Vector3 grassPosition = center;
-				for (const Vector3& corner : corners)
+				for (unsigned int cornerIndex = index; cornerIndex < index + 3; cornerIndex++)
 				{
-					Vector3 toCorner = corner - grassPosition;
+					Vector3 toCorner = vertices[cornerIndex].position - grassPosition;
 					grassPosition += toCorner * MathFunctions::getRandomFloat(0.0f, 1.0f);
 				}
 
@@ -338,27 +431,28 @@ namespace theisland
 				float height = MathFunctions::getRandomFloat(0.5f, 1.5f) * averageBladeHeight;
 				float angle = MathFunctions::getRandomFloat(0.0f, 1.0f);
 
-				ModelFactory::addTriangleVertexList(vertices, blade * 3, Vector4(0.0f, saturation, 0.0f, 1.0f),
+				ModelFactory::addTriangleVertexList(bladeVertices, blade * 3, Vector4(0.0f, saturation, 0.0f, 1.0f),
 						grassPosition + Vector3(0.0f, height, 0.0f),
 						//Vector3(height * 0.1f, -height, 0.0f),
 						//Vector3(-height * 0.1f, -height, 0.0f));
 						Vector3(sin(angle) * height * 0.1f, -height, cos(angle) * height * 0.1f),
 						Vector3(-sin(angle) * height * 0.1f, -height, -cos(angle) * height * 0.1f));
 
-				ModelFactory::addTriangleIndexList(indices, blade * 6, blade * 3);
-				ModelFactory::addTriangleIndexList(indices, blade * 6 + 3, blade * 3, true);
+				ModelFactory::addTriangleIndexList(bladeIndices, blade * 6, blade * 3);
+				ModelFactory::addTriangleIndexList(bladeIndices, blade * 6 + 3, blade * 3, true);
 			}
 
 			unique_ptr<Model> grassModel =
-					ModelFactory::getInstance().createMesh(vertices, indices);
+					ModelFactory::getInstance().createMesh(bladeVertices, bladeIndices);
 			grass->addUniqueComponent(move(grassModel));
 
 			Simplicity::addEntity(move(grass));
 		}
 
-		void growTree(const Vector3& position0, const Vector3& position1, const Vector3& position2)
+		void growTree(const vector<Vertex>& vertices, unsigned int index)
 		{
-			Vector3 center = (position0 + position1 + position2) / 3.0f;
+			Vector3 center = (vertices[index].position + vertices[index + 1].position + vertices[index + 2].position) /
+					3.0f;
 			Vector3 up(0.0f, 1.0f, 0.0f);
 
 			if (dotProduct(center, up) > 0.8f)
@@ -408,6 +502,30 @@ namespace theisland
 			heightMap[x][z] += randomization;
 
 			slopeMap[x][z] = heightMap[x][z] - heightFactor;
+		}
+
+		void smoothen(vector<Vertex>& vertices, unsigned int index)
+		{
+			unsigned int gridElement = index / 6;
+			unsigned int edgeLength = sqrt(vertices.size() / 6);
+
+			unsigned int x = gridElement / edgeLength;
+			unsigned int z = gridElement % edgeLength;
+
+			if (index % 2 == 0)
+			{
+				Vector3 before = vertices[index].normal;
+				vertices[index].normal = getSmoothNormal(vertices, x, z);
+				Vector3 after = vertices[index].normal;
+				vertices[index + 1].normal = getSmoothNormal(vertices, x, z + 1);
+				vertices[index + 2].normal = getSmoothNormal(vertices, x + 1, z + 1);
+			}
+			else
+			{
+				vertices[index].normal = getSmoothNormal(vertices, x, z);
+				vertices[index + 1].normal = getSmoothNormal(vertices, x + 1, z + 1);
+				vertices[index + 2].normal = getSmoothNormal(vertices, x + 1, z);
+			}
 		}
 	}
 }
