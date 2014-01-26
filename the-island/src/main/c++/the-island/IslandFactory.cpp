@@ -30,6 +30,7 @@ namespace theisland
 {
 	namespace IslandFactory
 	{
+		void addDetail(Vertex& vertex0, Vertex& vertex1, Vertex& vertex2);
 		unsigned int adjustIndex(unsigned int index, int adjustment, string adjustmentAxis, string axis, int direction);
 		void fillHeightMapSector(unsigned int radius, const vector<float>& profile, vector<vector<float>>& heightMap,
 				vector<vector<float>>& slopeMap, string axis, int direction);
@@ -40,11 +41,58 @@ namespace theisland
 				unsigned int endIndex, float& heightFactor, float& slopeFactor);
 		void getTraversalIndices(unsigned int radius, unsigned int currentRadius, string axis, int direction,
 				unsigned int& beginIndexX, unsigned int& endIndexX, unsigned int& beginIndexZ, unsigned int& endIndexZ);
+		void growGrass(const Vector3& position0, const Vector3& position1, const Vector3& position2);
+		void growTree(const Vector3& position0, const Vector3& position1, const Vector3& position2);
 		void initializeMaps(vector<vector<float>>& heightMap, vector<vector<float>>& slopeMap, unsigned int edgeLength);
-		void setColour(Vertex& vertex);
 		void setHeight(unsigned int radius, const vector<float>& profile, unsigned int x, unsigned int z,
 				vector<vector<float>>& heightMap, vector<vector<float>>& slopeMap, float heightFactor,
 				float slopeFactor);
+
+		void addDetail(Vertex& vertex0, Vertex& vertex1, Vertex& vertex2)
+		{
+			Vector3 up(0.0, 1.0, 0.0);
+			float maxY = max(vertex0.position.Y(), max(vertex1.position.Y(), vertex2.position.Y()));
+
+			// Cliffs!
+			if (abs(dotProduct(vertex0.normal, up)) < 0.2f)
+			{
+				vertex0.color = Vector4(0.6f, 0.6f, 0.6f, 1.0f);
+				vertex1.color = Vector4(0.6f, 0.6f, 0.6f, 1.0f);
+				vertex2.color = Vector4(0.6f, 0.6f, 0.6f, 1.0f);
+
+				return;
+			}
+
+			// Snow!
+			if (maxY > 20.0f)
+			{
+				vertex0.color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+				vertex1.color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+				vertex2.color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+
+				return;
+			}
+
+			// Beaches!
+			if ((abs(dotProduct(vertex0.normal, up)) > 0.5f && maxY < 0.5f) ||
+					maxY < 0.0f)
+			{
+				vertex0.color = Vector4(0.83f, 0.65f, 0.15f, 1.0f);
+				vertex1.color = Vector4(0.83f, 0.65f, 0.15f, 1.0f);
+				vertex2.color = Vector4(0.83f, 0.65f, 0.15f, 1.0f);
+
+				return;
+			}
+
+			// Grass!
+			growGrass(vertex0.position, vertex1.position, vertex2.position);
+
+			// Trees!
+			if (MathFunctions::getRandomBool(0.025f))
+			{
+				growTree(vertex0.position, vertex1.position, vertex2.position);
+			}
+		}
 
 		unsigned int adjustIndex(unsigned int index, int adjustment, string adjustmentAxis, string axis, int direction)
 		{
@@ -78,9 +126,9 @@ namespace theisland
 			unique_ptr<Mesh> mesh = ModelFactory::getInstance().createHeightMapMesh(heightMap,
 					Vector4(0.0f, 0.5f, 0.0f, 1.0f));
 
-			for (Vertex& vertex : mesh->getVertices())
+			for (unsigned int index = 0; index < mesh->getVertices().size(); index += 3)
 			{
-				setColour(vertex);
+				addDetail(mesh->getVertices()[index], mesh->getVertices()[index + 1], mesh->getVertices()[index + 2]);
 			}
 
 			island->addUniqueComponent(move(mesh));
@@ -111,21 +159,6 @@ namespace theisland
 						MathFunctions::setTranslation(rock->getTransformation(),
 								Vector3(x - radius, heightMap[x][z], z - radius));
 						Simplicity::addEntity(move(rock));
-					}
-
-					if (slopeMap[x][z] > 1.0f)
-					{
-						continue;
-					}
-
-					// Trees!
-					/////////////////////////
-					if (MathFunctions::getRandomBool(0.025f))
-					{
-						unique_ptr<Entity> tree = TreeFactory::createTree(MathFunctions::getRandomFloat(100.0f, 200.0f));
-						MathFunctions::setTranslation(tree->getTransformation(),
-								Vector3(x - radius, heightMap[x][z] - 0.1f, z - radius));
-						Simplicity::addEntity(move(tree));
 					}
 				}
 			}
@@ -277,6 +310,67 @@ namespace theisland
 			}
 		}
 
+		void growGrass(const Vector3& position0, const Vector3& position1, const Vector3& position2)
+		{
+			unique_ptr<Entity> grass(new Entity);
+
+			unsigned int blades = 20;
+			float averageBladeHeight = 0.5f;
+			vector<Vertex> vertices(blades * 3);
+			vector<unsigned int> indices(blades * 6);
+
+			Vector3 center = (position0 + position1 + position2) / 3.0f;
+			Vector3 corners[3];
+			corners[0] = position0;
+			corners[1] = position1;
+			corners[2] = position2;
+
+			for (unsigned int blade = 0; blade < blades; blade++)
+			{
+				Vector3 grassPosition = center;
+				for (const Vector3& corner : corners)
+				{
+					Vector3 toCorner = corner - grassPosition;
+					grassPosition += toCorner * MathFunctions::getRandomFloat(0.0f, 1.0f);
+				}
+
+				float saturation = MathFunctions::getRandomFloat(0.25f, 0.75f);
+				float height = MathFunctions::getRandomFloat(0.5f, 1.5f) * averageBladeHeight;
+				float angle = MathFunctions::getRandomFloat(0.0f, 1.0f);
+
+				ModelFactory::addTriangleVertexList(vertices, blade * 3, Vector4(0.0f, saturation, 0.0f, 1.0f),
+						grassPosition + Vector3(0.0f, height, 0.0f),
+						//Vector3(height * 0.1f, -height, 0.0f),
+						//Vector3(-height * 0.1f, -height, 0.0f));
+						Vector3(sin(angle) * height * 0.1f, -height, cos(angle) * height * 0.1f),
+						Vector3(-sin(angle) * height * 0.1f, -height, -cos(angle) * height * 0.1f));
+
+				ModelFactory::addTriangleIndexList(indices, blade * 6, blade * 3);
+				ModelFactory::addTriangleIndexList(indices, blade * 6 + 3, blade * 3, true);
+			}
+
+			unique_ptr<Model> grassModel =
+					ModelFactory::getInstance().createMesh(vertices, indices);
+			grass->addUniqueComponent(move(grassModel));
+
+			Simplicity::addEntity(move(grass));
+		}
+
+		void growTree(const Vector3& position0, const Vector3& position1, const Vector3& position2)
+		{
+			Vector3 center = (position0 + position1 + position2) / 3.0f;
+			Vector3 up(0.0f, 1.0f, 0.0f);
+
+			if (dotProduct(center, up) > 0.8f)
+			{
+				center.Y() -= 0.1f;
+
+				unique_ptr<Entity> tree = TreeFactory::createTree(MathFunctions::getRandomFloat(100.0f, 200.0f));
+				MathFunctions::setTranslation(tree->getTransformation(), center);
+				Simplicity::addEntity(move(tree));
+			}
+		}
+
 		void initializeMaps(vector<vector<float>>& heightMap, vector<vector<float>>& slopeMap, unsigned int edgeLength)
 		{
 			heightMap.reserve(edgeLength);
@@ -293,30 +387,6 @@ namespace theisland
 					heightMap[x].push_back(0.0f);
 					slopeMap[x].push_back(0.0f);
 				}
-			}
-		}
-
-		void setColour(Vertex& vertex)
-		{
-			Vector3 up(0.0, 1.0, 0.0);
-
-			// Beaches!
-			if ((abs(dotProduct(vertex.normal, up)) > 0.5f && vertex.position.Y() < 0.5f)
-					|| vertex.position.Y() < 0.0f)
-			{
-				vertex.color = Vector4(0.83f, 0.65f, 0.15f, 1.0f);
-			}
-
-			// Cliffs!
-			if (abs(dotProduct(vertex.normal, up)) < 0.2f)
-			{
-				vertex.color = Vector4(0.6f, 0.6f, 0.6f, 1.0f);
-			}
-
-			// Snow!
-			if (vertex.position.Y() > 20.0f)
-			{
-				vertex.color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 			}
 		}
 

@@ -98,6 +98,12 @@ void main()
 {
 	VertexFS vertexFS2 = vertexFS;
 
+	// Grass shader.
+	if (near(vertexFS.colour.x, 0.0f) && near(vertexFS.colour.y, 0.5f) && near(vertexFS.colour.z, 0.0f))
+	{
+		vertexFS2.colour.y = getRandomFloatZeroToOne(vertexFS.worldPosition.xz) * 0.5f + 0.25f;
+	}
+
 	// Sand shader.
 	if (near(vertexFS.colour.x, 0.83f) && near(vertexFS.colour.y, 0.65f) && near(vertexFS.colour.z, 0.15f))
 	{
@@ -105,10 +111,16 @@ void main()
 		{
 			vertexFS2.colour = vec4(0.72f, 0.44f, 0.04f, 1.0f);
 		}
-		else if (isGrain(vertexFS.worldPosition.xyz, 1.0f, 100.0f, 0.3f))
+		if (isGrain(vertexFS.worldPosition.xyz, 1.0f, 100.0f, 0.3f))
 		{
 			vertexFS2.colour = vec4(0.6f, 0.6f, 0.6f, 1.0f);
 		}
+	}
+
+	// Tree shader.
+	if (near(vertexFS.colour.x, 0.47f) && near(vertexFS.colour.y, 0.24f) && near(vertexFS.colour.z, 0.0f))
+	{
+		vertexFS2.colour *= getRandomFloatZeroToOne(vertexFS.worldPosition.xy * 0.000001f) * 0.5f + 0.25f;
 	}
 
 	colour = applyDirectionalLight(vertexFS2, theOnlyLight, cameraPosition);
