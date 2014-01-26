@@ -51,7 +51,7 @@ namespace theisland
 				unsigned int indexOffset = segment * verticesInTrunkSegment;
 
 				ModelFactory::addTunnelVertexList(vertices, indexOffset, segmentRadius, segmentHeight,
-						segmentDivisions, center, colour);
+						segmentDivisions, center, colour, true);
 
 				if (segment > 0)
 				{
