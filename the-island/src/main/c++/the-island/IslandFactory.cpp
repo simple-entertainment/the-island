@@ -14,11 +14,6 @@
  * You should have received a copy of the GNU General Public License along with The Island. If not, see
  * <http://www.gnu.org/licenses/>.
  */
-#include <simplicity/math/MathConstants.h>
-#include <simplicity/math/MathFunctions.h>
-#include <simplicity/model/ModelFactory.h>
-#include <simplicity/Simplicity.h>
-
 #include "IslandFactory.h"
 #include "RockFactory.h"
 #include "TreeFactory.h"
@@ -145,7 +140,17 @@ namespace theisland
 				addDetail(mesh->getVertices(), vertexIndex, mesh->getIndices());
 			}
 
+			/*Body::Material material;
+			material.density = 1.0f;
+			material.friction = 1.0f;
+			material.restitution = 1.0f;
+			unique_ptr<Body> body = PhysicsFactory::getInstance().createBody(material, mesh.get(), Matrix44(), false);
+			body->setEntity(island.get());
+			body->setMass(0.0f);*/
+
 			island->addUniqueComponent(move(mesh));
+			//island->addUniqueComponent(move(body));
+			//island->getTransformation()[13] = 1.0f;
 
 			// The Ocean!
 			/////////////////////////

@@ -19,7 +19,7 @@
 
 #include <memory>
 
-#include <simplicity/Entity.h>
+#include <simplicity/API.h>
 
 namespace theisland
 {

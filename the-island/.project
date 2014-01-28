@@ -4,8 +4,6 @@
 	<comment></comment>
 	<projects>
 		<project>simplicity</project>
-		<project>simplicity-freeglut</project>
-		<project>simplicity-opengl</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

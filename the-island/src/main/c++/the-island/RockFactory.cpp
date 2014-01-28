@@ -14,9 +14,6 @@
  * You should have received a copy of the GNU General Public License along with The Island. If not, see
  * <http://www.gnu.org/licenses/>.
  */
-#include <simplicity/math/MathFunctions.h>
-#include <simplicity/model/ModelFactory.h>
-
 #include "RockFactory.h"
 
 using namespace simplicity;

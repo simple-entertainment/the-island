@@ -14,19 +14,7 @@
  * You should have received a copy of the GNU General Public License along with The Island. If not, see
  * <http://www.gnu.org/licenses/>.
  */
-#ifndef ROCKFACTORY_H_
-#define ROCKFACTORY_H_
 
-#include <memory>
-
-#include <simplicity/API.h>
-
-namespace theisland
-{
-	namespace RockFactory
-	{
-		std::unique_ptr<simplicity::Entity> createRock(float radius);
-	}
-}
-
-#endif /* ROCKFACTORY_H_ */
+#include "IslandFactory.h"
+#include "RockFactory.h"
+#include "TreeFactory.h"
