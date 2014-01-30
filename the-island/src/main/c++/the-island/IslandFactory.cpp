@@ -14,6 +14,7 @@
  * You should have received a copy of the GNU General Public License along with The Island. If not, see
  * <http://www.gnu.org/licenses/>.
  */
+#include "EntityCategories.h"
 #include "IslandFactory.h"
 #include "RockFactory.h"
 #include "TreeFactory.h"
@@ -146,7 +147,7 @@ namespace theisland
 			{
 				for (unsigned int z = 0; z < edgeLength - 1; z += chunkSize)
 				{
-					unique_ptr<Entity> chunk(new Entity);
+					unique_ptr<Entity> chunk(new Entity(EntityCategories::GROUND));
 					unique_ptr<Mesh> mesh = ModelFactory::getInstance().createHeightMapMesh(heightMap, x,
 							x + chunkSize, z, z + chunkSize, Vector4(0.0f, 0.5f, 0.0f, 1.0f));
 
@@ -155,6 +156,8 @@ namespace theisland
 					{
 						addDetail(mesh->getVertices(), vertexIndex, mesh->getIndices());
 					}
+
+					unique_ptr<Model> bounds = ModelFunctions::getSquareBoundsXZ(mesh->getVertices());
 
 					/*Body::Material material;
 					material.density = 1.0f;
@@ -165,6 +168,7 @@ namespace theisland
 					body->setEntity(chunk.get());*/
 
 					chunk->addUniqueComponent(move(mesh));
+					chunk->addUniqueComponent(move(bounds));
 					//chunk->addUniqueComponent(move(body));
 
 					Simplicity::addEntity(move(chunk));
@@ -175,9 +179,12 @@ namespace theisland
 			/////////////////////////
 			unique_ptr<Entity> ocean(new Entity);
 			MathFunctions::rotate(ocean->getTransformation(), MathConstants::PI * 0.5f, Vector4(1.0f, 0.0f, 0.0f, 1.0f));
-			unique_ptr<Model> oceanModel =
+			unique_ptr<Mesh> oceanMesh =
 					ModelFactory::getInstance().createSquareMesh(500.0f, Vector4(0.0f, 0.4f, 0.6f, 1.0f), false);
-			ocean->addUniqueComponent(move(oceanModel));
+			unique_ptr<Model> oceanBounds(new Square(radius));
+			oceanBounds->setCategory(Categories::BOUNDS);
+			ocean->addUniqueComponent(move(oceanMesh));
+			ocean->addUniqueComponent(move(oceanBounds));
 			Simplicity::addEntity(move(ocean));
 		}
 
@@ -551,9 +558,10 @@ namespace theisland
 				ModelFactory::addTriangleIndexList(bladeIndices, blade * 6 + 3, blade * 3, true);
 			}
 
-			unique_ptr<Model> grassModel =
-					ModelFactory::getInstance().createMesh(bladeVertices, bladeIndices);
-			grass->addUniqueComponent(move(grassModel));
+			unique_ptr<Mesh> mesh = ModelFactory::getInstance().createMesh(bladeVertices, bladeIndices);
+			unique_ptr<Model> bounds = ModelFunctions::getCircleBoundsXZ(mesh->getVertices());
+			grass->addUniqueComponent(move(mesh));
+			grass->addUniqueComponent(move(bounds));
 
 			Simplicity::addEntity(move(grass));
 		}

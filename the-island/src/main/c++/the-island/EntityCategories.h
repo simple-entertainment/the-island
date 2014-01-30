@@ -14,8 +14,17 @@
  * You should have received a copy of the GNU General Public License along with The Island. If not, see
  * <http://www.gnu.org/licenses/>.
  */
+#ifndef ENTITYCATEGORIES_H_
+#define ENTITYCATEGORIES_H_
 
-#include "EntityCategories.h"
-#include "IslandFactory.h"
-#include "RockFactory.h"
-#include "TreeFactory.h"
+#include <simplicity/API.h>
+
+namespace theisland
+{
+	namespace EntityCategories
+	{
+		unsigned short GROUND = simplicity::Categories::USER_ID_0;
+	}
+}
+
+#endif /* ENTITYCATEGORIES_H_ */

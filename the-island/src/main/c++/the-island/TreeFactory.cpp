@@ -100,7 +100,10 @@ namespace theisland
 
 			unique_ptr<Entity> tree(new Entity);
 			MathFunctions::rotate(tree->getTransformation(), MathConstants::PI * 0.5f, Vector4(1.0f, 0.0f, 0.0f, 1.0f));
-			tree->addUniqueComponent(ModelFactory::getInstance().createMesh(vertices, indices));
+			unique_ptr<Mesh> mesh = ModelFactory::getInstance().createMesh(vertices, indices);
+			unique_ptr<Model> bounds = ModelFunctions::getCircleBoundsXZ(mesh->getVertices());
+			tree->addUniqueComponent(move(mesh));
+			tree->addUniqueComponent(move(bounds));
 
 			return move(tree);
 		}

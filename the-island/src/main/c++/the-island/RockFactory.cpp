@@ -25,18 +25,21 @@ namespace theisland
 	{
 		unique_ptr<Entity> createRock(float radius)
 		{
-			unique_ptr<Model> mesh = ModelFactory::getInstance().createSphereMesh(radius, 10,
+			unique_ptr<Mesh> mesh = ModelFactory::getInstance().createSphereMesh(radius, 10,
 					Vector4(0.6f, 0.6f, 0.6f, 1.0f));
 
-			for (Vertex& vertex : dynamic_cast<Mesh*>(mesh.get())->getVertices())
+			for (Vertex& vertex : mesh->getVertices())
 			{
 				vertex.position *= MathFunctions::getRandomFloat(0.75f, 1.25f);
 			}
 
 			// TODO Fix normals...
 
+			unique_ptr<Model> bounds = ModelFunctions::getCircleBoundsXZ(mesh->getVertices());
+
 			unique_ptr<Entity> rock(new Entity);
 			rock->addUniqueComponent(move(mesh));
+			rock->addUniqueComponent(move(bounds));
 
 			return move(rock);
 		}
