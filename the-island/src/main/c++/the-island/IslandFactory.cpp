@@ -50,8 +50,19 @@ namespace theisland
 		void addDetail(vector<Vertex>& vertices, unsigned int vertexIndex, vector<unsigned int>& indices)
 		{
 			Vector3 up(0.0, 1.0, 0.0);
+			Vector3 center = (vertices[vertexIndex].position + vertices[vertexIndex + 1].position +
+					vertices[vertexIndex + 2].position) / 3.0f;
 			float maxY = max(vertices[vertexIndex].position.Y(), max(vertices[vertexIndex + 1].position.Y(),
 					vertices[vertexIndex + 2].position.Y()));
+
+			// Rocks!
+			/////////////////////////
+			if (maxY > 0.0f && MathFunctions::getRandomBool(0.025f))
+			{
+				unique_ptr<Entity> rock = RockFactory::createRock(MathFunctions::getRandomFloat(0.25f, 0.75f));
+				MathFunctions::setTranslation(rock->getTransformation(), center);
+				Simplicity::addEntity(move(rock));
+			}
 
 			// Cliffs!
 			if (abs(dotProduct(vertices[vertexIndex].normal, up)) < 0.2f)
@@ -114,15 +125,15 @@ namespace theisland
 			}
 		}
 
-		unique_ptr<Entity> createIsland(unsigned int radius, const vector<float>& profile)
+		void createIsland(unsigned int radius, const vector<float>& profile, unsigned int chunkSize)
 		{
-			unique_ptr<Entity> island(new Entity);
+			unsigned int edgeLength = radius * 2 + 1;
 
 			// The Island!
 			/////////////////////////
 			vector<vector<float>> heightMap;
 			vector<vector<float>> slopeMap;
-			initializeMaps(heightMap, slopeMap, radius * 2 + 1);
+			initializeMaps(heightMap, slopeMap, edgeLength);
 
 			heightMap[radius][radius] = profile[0];
 
@@ -131,26 +142,34 @@ namespace theisland
 			fillHeightMapSector(radius, profile, heightMap, slopeMap, "z", -1);
 			fillHeightMapSector(radius, profile, heightMap, slopeMap, "z", 1);
 
-			unique_ptr<Mesh> mesh = ModelFactory::getInstance().createHeightMapMesh(heightMap,
-					Vector4(0.0f, 0.5f, 0.0f, 1.0f));
-
-			unsigned int vertexCount = mesh->getVertices().size();
-			for (unsigned int vertexIndex = 0; vertexIndex < vertexCount; vertexIndex += 3)
+			for (unsigned int x = 0; x < edgeLength - 1; x += chunkSize)
 			{
-				addDetail(mesh->getVertices(), vertexIndex, mesh->getIndices());
+				for (unsigned int z = 0; z < edgeLength - 1; z += chunkSize)
+				{
+					unique_ptr<Entity> chunk(new Entity);
+					unique_ptr<Mesh> mesh = ModelFactory::getInstance().createHeightMapMesh(heightMap, x,
+							x + chunkSize, z, z + chunkSize, Vector4(0.0f, 0.5f, 0.0f, 1.0f));
+
+					unsigned int vertexCount = mesh->getVertices().size();
+					for (unsigned int vertexIndex = 0; vertexIndex < vertexCount; vertexIndex += 3)
+					{
+						addDetail(mesh->getVertices(), vertexIndex, mesh->getIndices());
+					}
+
+					/*Body::Material material;
+					material.density = 1.0f;
+					material.friction = 1.0f;
+					material.restitution = 1.0f;
+					unique_ptr<Body> body = PhysicsFactory::getInstance().createBody(material, mesh.get(), Matrix44(),
+							false);
+					body->setEntity(chunk.get());*/
+
+					chunk->addUniqueComponent(move(mesh));
+					//chunk->addUniqueComponent(move(body));
+
+					Simplicity::addEntity(move(chunk));
+				}
 			}
-
-			/*Body::Material material;
-			material.density = 1.0f;
-			material.friction = 1.0f;
-			material.restitution = 1.0f;
-			unique_ptr<Body> body = PhysicsFactory::getInstance().createBody(material, mesh.get(), Matrix44(), false);
-			body->setEntity(island.get());
-			body->setMass(0.0f);*/
-
-			island->addUniqueComponent(move(mesh));
-			//island->addUniqueComponent(move(body));
-			//island->getTransformation()[13] = 1.0f;
 
 			// The Ocean!
 			/////////////////////////
@@ -160,29 +179,6 @@ namespace theisland
 					ModelFactory::getInstance().createSquareMesh(500.0f, Vector4(0.0f, 0.4f, 0.6f, 1.0f), false);
 			ocean->addUniqueComponent(move(oceanModel));
 			Simplicity::addEntity(move(ocean));
-
-			for (float x = 0; x < radius * 2 + 1; x++)
-			{
-				for (float z = 0; z < radius * 2 + 1; z++)
-				{
-					if (heightMap[x][z] <= 0.0f)
-					{
-						continue;
-					}
-
-					// Rocks!
-					/////////////////////////
-					if (MathFunctions::getRandomBool(0.025f))
-					{
-						unique_ptr<Entity> rock = RockFactory::createRock(MathFunctions::getRandomFloat(0.25f, 0.75f));
-						MathFunctions::setTranslation(rock->getTransformation(),
-								Vector3(x - radius, heightMap[x][z], z - radius));
-						Simplicity::addEntity(move(rock));
-					}
-				}
-			}
-
-			return move(island);
 		}
 
 		void divideTriangle(vector<Vertex>& vertices, unsigned int vertexIndex, vector<unsigned int>& indices,

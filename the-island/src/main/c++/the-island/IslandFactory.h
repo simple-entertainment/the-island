@@ -25,7 +25,7 @@ namespace theisland
 {
 	namespace IslandFactory
 	{
-		std::unique_ptr<simplicity::Entity> createIsland(unsigned int radius, const std::vector<float>& profile);
+		void createIsland(unsigned int radius, const std::vector<float>& profile, unsigned int chunkSize = 16);
 	}
 }
 
