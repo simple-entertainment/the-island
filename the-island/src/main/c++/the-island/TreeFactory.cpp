@@ -67,8 +67,8 @@ namespace theisland
 
 				if (segment != segments - 1)
 				{
-					center.X() += MathFunctions::getRandomFloat(-segmentRadius, segmentRadius);
-					center.Y() += MathFunctions::getRandomFloat(-segmentRadius, segmentRadius);
+					center.X() += getRandomFloat(-segmentRadius, segmentRadius);
+					center.Y() += getRandomFloat(-segmentRadius, segmentRadius);
 
 					segmentHeight -= segmentHeightDelta;
 					segmentRadius -= segmentRadiusDelta;
@@ -99,7 +99,7 @@ namespace theisland
 					segmentDivisions, true);
 
 			unique_ptr<Entity> tree(new Entity);
-			MathFunctions::rotate(tree->getTransformation(), MathConstants::PI * 0.5f, Vector4(1.0f, 0.0f, 0.0f, 1.0f));
+			rotate(tree->getTransform(), MathConstants::PI * 0.5f, Vector4(1.0f, 0.0f, 0.0f, 1.0f));
 			unique_ptr<Mesh> mesh = ModelFactory::getInstance().createMesh(vertices, indices);
 			unique_ptr<Model> bounds = ModelFunctions::getCircleBoundsXZ(mesh->getVertices());
 			tree->addUniqueComponent(move(mesh));

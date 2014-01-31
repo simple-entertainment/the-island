@@ -58,10 +58,10 @@ namespace theisland
 
 			// Rocks!
 			/////////////////////////
-			if (maxY > 0.0f && MathFunctions::getRandomBool(0.025f))
+			if (maxY > 0.0f && getRandomBool(0.025f))
 			{
-				unique_ptr<Entity> rock = RockFactory::createRock(MathFunctions::getRandomFloat(0.25f, 0.75f));
-				MathFunctions::setTranslation(rock->getTransformation(), center);
+				unique_ptr<Entity> rock = RockFactory::createRock(getRandomFloat(0.25f, 0.75f));
+				setPosition(rock->getTransform(), center);
 				Simplicity::addEntity(move(rock));
 			}
 
@@ -106,7 +106,7 @@ namespace theisland
 			growGrass(vertices, vertexIndex);
 
 			// Trees!
-			if (MathFunctions::getRandomBool(0.025f))
+			if (getRandomBool(0.025f))
 			{
 				growTree(vertices, vertexIndex);
 			}
@@ -164,7 +164,7 @@ namespace theisland
 					material.friction = 0.5f;
 					material.restitution = 0.5f;
 					unique_ptr<Body> body = PhysicsFactory::getInstance().createBody(material, mesh.get(),
-							chunk->getTransformation(), false);
+							chunk->getTransform(), false);
 					body->setEntity(chunk.get());
 
 					chunk->addUniqueComponent(move(mesh));
@@ -178,7 +178,7 @@ namespace theisland
 			// The Ocean!
 			/////////////////////////
 			unique_ptr<Entity> ocean(new Entity);
-			MathFunctions::rotate(ocean->getTransformation(), MathConstants::PI * 0.5f, Vector4(1.0f, 0.0f, 0.0f, 1.0f));
+			rotate(ocean->getTransform(), MathConstants::PI * 0.5f, Vector4(1.0f, 0.0f, 0.0f, 1.0f));
 			unique_ptr<Mesh> oceanMesh =
 					ModelFactory::getInstance().createSquareMesh(500.0f, Vector4(0.0f, 0.4f, 0.6f, 1.0f), false);
 			unique_ptr<Model> oceanBounds(new Square(radius));
@@ -195,13 +195,10 @@ namespace theisland
 					vertices[vertexIndex + 2].position) / 3.0f;
 
 			Vector3 divideCenter = center;
-			divideCenter += (vertices[vertexIndex].position - center) * 0.5f *
-					MathFunctions::getRandomFloat(0.0f, 1.0f);
-			divideCenter += (vertices[vertexIndex + 1].position - center) * 0.5f *
-					MathFunctions::getRandomFloat(0.0f, 1.0f);
-			divideCenter += (vertices[vertexIndex + 2].position - center) * 0.5f *
-					MathFunctions::getRandomFloat(0.0f, 1.0f);
-			divideCenter += vertices[vertexIndex].normal * MathFunctions::getRandomFloat(-0.1f, 0.1f);
+			divideCenter += (vertices[vertexIndex].position - center) * 0.5f * getRandomFloat(0.0f, 1.0f);
+			divideCenter += (vertices[vertexIndex + 1].position - center) * 0.5f * getRandomFloat(0.0f, 1.0f);
+			divideCenter += (vertices[vertexIndex + 2].position - center) * 0.5f * getRandomFloat(0.0f, 1.0f);
+			divideCenter += vertices[vertexIndex].normal * getRandomFloat(-0.1f, 0.1f);
 
 			Vertex triangle0[3];
 			triangle0[0].color = vertices[vertexIndex].color;
@@ -213,7 +210,7 @@ namespace theisland
 
 			Vector3 edge0 = triangle0[1].position - triangle0[0].position;
 			Vector3 edge1 = triangle0[2].position - triangle0[0].position;
-			Vector3 normal = MathFunctions::crossProduct(edge0, edge1);
+			Vector3 normal = crossProduct(edge0, edge1);
 			triangle0[0].normal = normal;
 			triangle0[1].normal = normal;
 			triangle0[2].normal = normal;
@@ -228,7 +225,7 @@ namespace theisland
 
 			edge0 = triangle1[1].position - triangle1[0].position;
 			edge1 = triangle1[2].position - triangle1[0].position;
-			normal = MathFunctions::crossProduct(edge0, edge1);
+			normal = crossProduct(edge0, edge1);
 			triangle1[0].normal = normal;
 			triangle1[1].normal = normal;
 			triangle1[2].normal = normal;
@@ -243,7 +240,7 @@ namespace theisland
 
 			edge0 = triangle2[1].position - triangle2[0].position;
 			edge1 = triangle2[2].position - triangle2[0].position;
-			normal = MathFunctions::crossProduct(edge0, edge1);
+			normal = crossProduct(edge0, edge1);
 			triangle2[0].normal = normal;
 			triangle2[1].normal = normal;
 			triangle2[2].normal = normal;
@@ -415,13 +412,13 @@ namespace theisland
 				edge0.normalize();
 				Vector3 edge1 = vertices[p2].position - vertices[p0].position;
 				edge1.normalize();
-				normal += MathFunctions::crossProduct(edge0, edge1);
+				normal += crossProduct(edge0, edge1);
 
 				Vector3 edge2 = vertices[p2].position - vertices[p0].position;
 				edge2.normalize();
 				Vector3 edge3 = vertices[p3].position - vertices[p0].position;
 				edge3.normalize();
-				normal += MathFunctions::crossProduct(edge2, edge3);
+				normal += crossProduct(edge2, edge3);
 			}
 
 			if (x > 0 && z < edgeLength)
@@ -436,7 +433,7 @@ namespace theisland
 				edge2.normalize();
 				Vector3 edge3 = vertices[p3].position - vertices[p0].position;
 				edge3.normalize();
-				normal += MathFunctions::crossProduct(edge2, edge3);
+				normal += crossProduct(edge2, edge3);
 			}
 
 			if (z > 0 && x < edgeLength)
@@ -451,7 +448,7 @@ namespace theisland
 				edge0.normalize();
 				Vector3 edge1 = vertices[p2].position - vertices[p0].position;
 				edge1.normalize();
-				normal += MathFunctions::crossProduct(edge0, edge1);
+				normal += crossProduct(edge0, edge1);
 			}
 
 			if (x < edgeLength && z < edgeLength)
@@ -467,13 +464,13 @@ namespace theisland
 				edge0.normalize();
 				Vector3 edge1 = vertices[p2].position - vertices[p0].position;
 				edge1.normalize();
-				normal += MathFunctions::crossProduct(edge0, edge1);
+				normal += crossProduct(edge0, edge1);
 
 				Vector3 edge2 = vertices[p2].position - vertices[p0].position;
 				edge2.normalize();
 				Vector3 edge3 = vertices[p3].position - vertices[p0].position;
 				edge3.normalize();
-				normal += MathFunctions::crossProduct(edge2, edge3);
+				normal += crossProduct(edge2, edge3);
 			}
 
 			normal.normalize();
@@ -540,12 +537,12 @@ namespace theisland
 				for (unsigned int cornerIndex = vertexIndex; cornerIndex < vertexIndex + 3; cornerIndex++)
 				{
 					Vector3 toCorner = vertices[cornerIndex].position - grassPosition;
-					grassPosition += toCorner * MathFunctions::getRandomFloat(0.0f, 1.0f);
+					grassPosition += toCorner * getRandomFloat(0.0f, 1.0f);
 				}
 
-				float saturation = MathFunctions::getRandomFloat(0.25f, 0.75f);
-				float height = MathFunctions::getRandomFloat(0.5f, 1.5f) * averageBladeHeight;
-				float angle = MathFunctions::getRandomFloat(0.0f, 1.0f);
+				float saturation = getRandomFloat(0.25f, 0.75f);
+				float height = getRandomFloat(0.5f, 1.5f) * averageBladeHeight;
+				float angle = getRandomFloat(0.0f, 1.0f);
 
 				ModelFactory::addTriangleVertexList(bladeVertices, blade * 3, Vector4(0.0f, saturation, 0.0f, 1.0f),
 						grassPosition + Vector3(0.0f, height, 0.0f),
@@ -576,8 +573,8 @@ namespace theisland
 			{
 				center.Y() -= 0.1f;
 
-				unique_ptr<Entity> tree = TreeFactory::createTree(MathFunctions::getRandomFloat(100.0f, 200.0f));
-				MathFunctions::setTranslation(tree->getTransformation(), center);
+				unique_ptr<Entity> tree = TreeFactory::createTree(getRandomFloat(100.0f, 200.0f));
+				setPosition(tree->getTransform(), center);
 				Simplicity::addEntity(move(tree));
 			}
 		}
@@ -605,7 +602,7 @@ namespace theisland
 				vector<vector<float>>& heightMap, vector<vector<float>>& slopeMap, float heightFactor,
 				float slopeFactor)
 		{
-			if (MathFunctions::getRandomBool(0.8f))
+			if (getRandomBool(0.8f))
 			{
 				heightMap[x][z] = heightFactor;// + slopeFactor;
 			}
@@ -615,7 +612,7 @@ namespace theisland
 				heightMap[x][z] = profile[distance];
 			}
 
-			float randomization = MathFunctions::getRandomFloat(-0.1f, 0.1f);
+			float randomization = getRandomFloat(-0.1f, 0.1f);
 			heightMap[x][z] += randomization;
 
 			slopeMap[x][z] = heightMap[x][z] - heightFactor;

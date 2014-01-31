@@ -30,7 +30,7 @@ namespace theisland
 
 			for (Vertex& vertex : mesh->getVertices())
 			{
-				vertex.position *= MathFunctions::getRandomFloat(0.75f, 1.25f);
+				vertex.position *= getRandomFloat(0.75f, 1.25f);
 			}
 
 			// TODO Fix normals...
