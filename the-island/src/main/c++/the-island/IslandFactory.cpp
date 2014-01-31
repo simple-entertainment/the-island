@@ -159,17 +159,17 @@ namespace theisland
 
 					unique_ptr<Model> bounds = ModelFunctions::getSquareBoundsXZ(mesh->getVertices());
 
-					/*Body::Material material;
-					material.density = 1.0f;
-					material.friction = 1.0f;
-					material.restitution = 1.0f;
-					unique_ptr<Body> body = PhysicsFactory::getInstance().createBody(material, mesh.get(), Matrix44(),
-							false);
-					body->setEntity(chunk.get());*/
+					Body::Material material;
+					material.mass = 0.0f;
+					material.friction = 0.5f;
+					material.restitution = 0.5f;
+					unique_ptr<Body> body = PhysicsFactory::getInstance().createBody(material, mesh.get(),
+							chunk->getTransformation(), false);
+					body->setEntity(chunk.get());
 
 					chunk->addUniqueComponent(move(mesh));
 					chunk->addUniqueComponent(move(bounds));
-					//chunk->addUniqueComponent(move(body));
+					chunk->addUniqueComponent(move(body));
 
 					Simplicity::addEntity(move(chunk));
 				}
