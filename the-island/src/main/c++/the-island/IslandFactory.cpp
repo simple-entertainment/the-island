@@ -544,12 +544,11 @@ namespace theisland
 				float height = getRandomFloat(0.5f, 1.5f) * averageBladeHeight;
 				float angle = getRandomFloat(0.0f, 1.0f);
 
-				ModelFactory::addTriangleVertexList(bladeVertices, blade * 3, Vector4(0.0f, saturation, 0.0f, 1.0f),
+				ModelFactory::addTriangleVertexList(bladeVertices, blade * 3,
 						grassPosition + Vector3(0.0f, height, 0.0f),
-						//Vector3(height * 0.1f, -height, 0.0f),
-						//Vector3(-height * 0.1f, -height, 0.0f));
 						Vector3(sin(angle) * height * 0.1f, -height, cos(angle) * height * 0.1f),
-						Vector3(-sin(angle) * height * 0.1f, -height, -cos(angle) * height * 0.1f));
+						Vector3(-sin(angle) * height * 0.1f, -height, -cos(angle) * height * 0.1f),
+						Vector4(0.0f, saturation, 0.0f, 1.0f));
 
 				ModelFactory::addTriangleIndexList(bladeIndices, blade * 6, blade * 3);
 				ModelFactory::addTriangleIndexList(bladeIndices, blade * 6 + 3, blade * 3, true);
