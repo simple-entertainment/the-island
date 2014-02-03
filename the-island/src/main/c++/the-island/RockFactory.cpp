@@ -26,14 +26,40 @@ namespace theisland
 		unique_ptr<Entity> createRock(float radius)
 		{
 			unique_ptr<Mesh> mesh = ModelFactory::getInstance().createSphereMesh(radius, 10,
-					Vector4(0.6f, 0.6f, 0.6f, 1.0f));
+					Vector4(0.6f, 0.6f, 0.6f, 1.0f), false);
 
-			for (Vertex& vertex : mesh->getVertices())
+			float variance[10][10];
+			for (unsigned int latitude = 0; latitude < 10; latitude++)
 			{
-				vertex.position *= getRandomFloat(0.75f, 1.25f);
+				for (unsigned int longitude = 0; longitude < 10; longitude++)
+				{
+					variance[latitude][longitude] = getRandomFloat(0.75f, 1.25f);
+				}
 			}
 
-			// TODO Fix normals...
+			vector<Vertex>& vertices = mesh->getVertices();
+			for (unsigned int latitude = 0; latitude < 10; latitude++)
+			{
+				for (unsigned int longitude = 0; longitude < 10; longitude++)
+				{
+					unsigned int segmentIndex = (latitude * 10 + longitude) * 4;
+
+					vertices[segmentIndex].position *= variance[latitude][longitude];
+					vertices[segmentIndex + 1].position *= variance[(latitude + 1) % 10][longitude];
+					vertices[segmentIndex + 2].position *= variance[(latitude + 1) % 10][(longitude + 1) % 10];
+					vertices[segmentIndex + 3].position *= variance[latitude][(longitude + 1) % 10];
+
+					Vector3 edge0 = vertices[segmentIndex + 1].position - vertices[segmentIndex].position;
+					Vector3 edge1 = vertices[segmentIndex + 2].position - vertices[segmentIndex].position;
+					Vector3 normal = crossProduct(edge0, edge1);
+					normal.normalize();
+
+					vertices[segmentIndex].normal = normal;
+					vertices[segmentIndex + 1].normal = normal;
+					vertices[segmentIndex + 2].normal = normal;
+					vertices[segmentIndex + 3].normal = normal;
+				}
+			}
 
 			unique_ptr<Model> bounds = ModelFunctions::getCircleBoundsXZ(mesh->getVertices());
 
