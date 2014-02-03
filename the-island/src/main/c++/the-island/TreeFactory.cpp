@@ -27,7 +27,7 @@ namespace theisland
 		{
 			unsigned int segments = 4;
 			unsigned int segmentDivisions = 5;
-			Vector4 colour(0.47f, 0.24f, 0.0f, 1.0f);
+			Vector4 color(0.47f, 0.24f, 0.0f, 1.0f);
 
 			float segmentHeight = age / 400.0f * 5.0f;
 			float segmentHeightDelta = segmentHeight / segments / 2.0f;
@@ -47,7 +47,7 @@ namespace theisland
 				unsigned int indexOffset = segment * verticesInTrunkSegment;
 
 				ModelFactory::addTunnelVertexList(vertices, indexOffset, segmentRadius, segmentHeight,
-						segmentDivisions, center, colour);
+						segmentDivisions, center, color);
 
 				if (segment > 0)
 				{
@@ -77,7 +77,7 @@ namespace theisland
 
 			// Trunk Top
 			ModelFactory::addCircleVertexList(vertices, verticesInTrunkSegments, segmentRadius, segmentDivisions,
-					center, colour);
+					center, color);
 
 			// Indices
 			unsigned int indicesInTrunkSegment = segmentDivisions * 6;
