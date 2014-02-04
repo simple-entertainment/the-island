@@ -176,11 +176,15 @@ namespace theisland
 			// The Ocean!
 			/////////////////////////
 			unique_ptr<Entity> ocean(new Entity);
-			rotate(ocean->getTransform(), MathConstants::PI * 0.5f, Vector4(1.0f, 0.0f, 0.0f, 1.0f));
+			rotate(ocean->getTransform(), MathConstants::PI * -0.5f, Vector3(1.0f, 0.0f, 0.0f));
+
 			unique_ptr<Mesh> oceanMesh =
-					ModelFactory::getInstance().createSquareMesh(500.0f, Vector4(0.0f, 0.4f, 0.6f, 1.0f), false);
+					ModelFactory::getInstance().createCylinderMesh(250.0f, 500.0f, 20, Vector4(0.0f, 0.4f, 0.6f, 1.0f),
+							true);
+
 			unique_ptr<Model> oceanBounds(new Square(radius));
 			oceanBounds->setCategory(Categories::BOUNDS);
+
 			ocean->addUniqueComponent(move(oceanMesh));
 			ocean->addUniqueComponent(move(oceanBounds));
 			Simplicity::addEntity(move(ocean));
