@@ -23,7 +23,7 @@ namespace theisland
 {
 	namespace RockFactory
 	{
-		unique_ptr<Entity> createRock(float radius)
+		void createRock(const Vector3& position, float radius)
 		{
 			unique_ptr<Mesh> mesh = ModelFactory::getInstance().createSphereMesh(radius, 10,
 					Vector4(0.6f, 0.6f, 0.6f, 1.0f), false);
@@ -64,10 +64,10 @@ namespace theisland
 			unique_ptr<Model> bounds = ModelFunctions::getCircleBoundsXZ(mesh->getVertices());
 
 			unique_ptr<Entity> rock(new Entity);
+			setPosition(rock->getTransform(), position);
 			rock->addUniqueComponent(move(mesh));
 			rock->addUniqueComponent(move(bounds));
-
-			return move(rock);
+			Simplicity::addEntity(move(rock));
 		}
 	}
 }

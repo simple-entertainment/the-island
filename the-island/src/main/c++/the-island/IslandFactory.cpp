@@ -60,9 +60,7 @@ namespace theisland
 			/////////////////////////
 			if (maxY > 0.0f && getRandomBool(0.025f))
 			{
-				unique_ptr<Entity> rock = RockFactory::createRock(getRandomFloat(0.25f, 0.75f));
-				setPosition(rock->getTransform(), center);
-				Simplicity::addEntity(move(rock));
+				RockFactory::createRock(center, getRandomFloat(0.25f, 0.75f));
 			}
 
 			// Cliffs!
@@ -572,9 +570,7 @@ namespace theisland
 			{
 				center.Y() -= 0.1f;
 
-				unique_ptr<Entity> tree = TreeFactory::createTree(getRandomFloat(100.0f, 200.0f));
-				setPosition(tree->getTransform(), center);
-				Simplicity::addEntity(move(tree));
+				TreeFactory::createTree(center, getRandomFloat(100.0f, 200.0f));
 			}
 		}
 
