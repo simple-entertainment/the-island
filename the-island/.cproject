@@ -48,7 +48,6 @@
 							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.610504112" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug">
 								<option id="gnu.cpp.link.option.libs.1444599439" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="simplicity"/>
-									<listOptionValue builtIn="false" srcPrefixMapping="" srcRootPath="" value="boost_timer"/>
 								</option>
 								<option id="gnu.cpp.link.option.paths.1911642633" name="Library search path (-L)" superClass="gnu.cpp.link.option.paths" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/simplicity/Debug}&quot;"/>
