@@ -64,7 +64,7 @@ namespace theisland
 			}
 
 			// Cliffs!
-			if (abs(dotProduct(vertices[vertexIndex].normal, up)) < 0.2f)
+			if (fabs(dotProduct(vertices[vertexIndex].normal, up)) < 0.2f)
 			{
 				vertices[vertexIndex].color = Vector4(0.6f, 0.6f, 0.6f, 1.0f);
 				vertices[vertexIndex + 1].color = Vector4(0.6f, 0.6f, 0.6f, 1.0f);
@@ -88,7 +88,7 @@ namespace theisland
 			}
 
 			// Beaches!
-			if ((abs(dotProduct(vertices[vertexIndex].normal, up)) > 0.5f && maxY < 0.5f) ||
+			if ((fabs(dotProduct(vertices[vertexIndex].normal, up)) > 0.5f && maxY < 0.5f) ||
 					maxY < 0.0f)
 			{
 				vertices[vertexIndex].color = Vector4(0.83f, 0.65f, 0.15f, 1.0f);
@@ -101,7 +101,7 @@ namespace theisland
 			}
 
 			// Grass!
-			growGrass(vertices, vertexIndex);
+			//growGrass(vertices, vertexIndex);
 
 			// Trees!
 			if (getRandomBool(0.025f))
@@ -614,7 +614,7 @@ namespace theisland
 			}
 			else
 			{
-				float distance = floor(sqrt(pow(abs((float) radius - x), 2) + pow(abs((float) radius - z), 2)));
+				float distance = floor(sqrt(pow(fabs((float) radius - x), 2) + pow(fabs((float) radius - z), 2)));
 				heightMap[x][z] = profile[distance];
 			}
 
