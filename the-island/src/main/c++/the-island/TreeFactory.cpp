@@ -85,12 +85,12 @@ namespace theisland
 				float scale = (1.0f - ((float) segment / SEGMENTS)) * 0.5f;
 
 				float saturation0 = getRandomFloat(0.25f, 0.75f);
-				ModelFactory::addTriangleVertexList(vertices, segment * 6,
+				ModelFactory::insertTriangleVertices(vertices, segment * 6,
 						segmentCenter + Vector3(scale * 10.0f, 0.0f, 0.0f), Vector3(-scale * 10.0f, scale * 2.0f, 0.0f),
 						Vector3(-scale * 10.0f, -scale * 2.0f, 0.0f), Vector4(0.0f, saturation0, 0.0f, 1.0f));
 
 				float saturation1 = getRandomFloat(0.25f, 0.75f);
-				ModelFactory::addTriangleVertexList(vertices, segment * 6 + 3,
+				ModelFactory::insertTriangleVertices(vertices, segment * 6 + 3,
 						segmentCenter + Vector3(-scale * 10.0f, 0.0f, 0.0f), Vector3(scale * 10.0f, scale * 2.0f, 0.0f),
 						Vector3(scale * 10.0f, -scale * 2.0f, 0.0f), Vector4(0.0f, saturation1, 0.0f, 1.0f));
 			}
@@ -99,10 +99,10 @@ namespace theisland
 			vector<unsigned int> indices(SEGMENTS * 12);
 			for (unsigned int segment = 0; segment < SEGMENTS; segment++)
 			{
-				ModelFactory::addTriangleIndexList(indices, segment * 12, segment * 6);
-				ModelFactory::addTriangleIndexList(indices, segment * 12 + 3, segment * 6, true);
-				ModelFactory::addTriangleIndexList(indices, segment * 12 + 6, segment * 6 + 3);
-				ModelFactory::addTriangleIndexList(indices, segment * 12 + 9, segment * 6 + 3, true);
+				ModelFactory::insertTriangleIndices(indices, segment * 12, segment * 6);
+				ModelFactory::insertTriangleIndices(indices, segment * 12 + 3, segment * 6, true);
+				ModelFactory::insertTriangleIndices(indices, segment * 12 + 6, segment * 6 + 3);
+				ModelFactory::insertTriangleIndices(indices, segment * 12 + 9, segment * 6 + 3, true);
 			}
 
 			unique_ptr<Mesh> leaf = ModelFactory::getInstance().createMesh(vertices, indices);
@@ -180,7 +180,7 @@ namespace theisland
 			{
 				unsigned int indexOffset = segment * verticesInTrunkSegment;
 
-				ModelFactory::addTunnelVertexList(vertices, indexOffset, segmentRadius, segmentHeight,
+				ModelFactory::insertTunnelVertices(vertices, indexOffset, segmentRadius, segmentHeight,
 						SEGMENT_DIVISIONS, center, color);
 
 				if (segment > 0)
@@ -210,7 +210,7 @@ namespace theisland
 			}
 
 			// Trunk Top
-			ModelFactory::addCircleVertexList(vertices, verticesInTrunkSegments, segmentRadius, SEGMENT_DIVISIONS,
+			ModelFactory::insertCircleVertices(vertices, verticesInTrunkSegments, segmentRadius, SEGMENT_DIVISIONS,
 					center, color);
 
 			// Rotate so it's standing upright
@@ -228,11 +228,11 @@ namespace theisland
 				unsigned int indexOffset = segment * indicesInTrunkSegment;
 				unsigned int vertexIndexOffset = segment * verticesInTrunkSegment;
 
-				ModelFactory::addTunnelIndexList(indices, indexOffset, vertexIndexOffset, SEGMENT_DIVISIONS);
+				ModelFactory::insertTunnelIndices(indices, indexOffset, vertexIndexOffset, SEGMENT_DIVISIONS);
 			}
 
 			// Trunk Top
-			ModelFactory::addCircleIndexList(indices, indicesInTrunkSegments, verticesInTrunkSegments,
+			ModelFactory::insertCircleIndices(indices, indicesInTrunkSegments, verticesInTrunkSegments,
 					SEGMENT_DIVISIONS, true);
 
 			unique_ptr<Mesh> trunk = ModelFactory::getInstance().createMesh(vertices, indices);
