@@ -67,7 +67,7 @@ namespace theisland
 			setPosition(rock->getTransform(), position);
 			rock->addUniqueComponent(move(mesh));
 			rock->addUniqueComponent(move(bounds));
-			Simplicity::addEntity(move(rock));
+			Simplicity::getScene()->addEntity(move(rock));
 		}
 	}
 }

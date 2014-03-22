@@ -169,7 +169,7 @@ namespace theisland
 					chunk->addUniqueComponent(move(bounds));
 					chunk->addUniqueComponent(move(body));
 
-					Simplicity::addEntity(move(chunk));
+					Simplicity::getScene()->addEntity(move(chunk));
 				}
 			}
 
@@ -182,7 +182,7 @@ namespace theisland
 					Vector4(0.0f, 0.5f, 0.75f, 1.0f), true);
 
 			sky->addUniqueComponent(move(skyMesh));
-			Simplicity::addEntity(move(sky));
+			Simplicity::getScene()->addEntity(move(sky));
 
 			// The Ocean!
 			/////////////////////////
@@ -194,7 +194,7 @@ namespace theisland
 							true);
 
 			ocean->addUniqueComponent(move(oceanMesh));
-			Simplicity::addEntity(move(ocean));
+			Simplicity::getScene()->addEntity(move(ocean));
 		}
 
 		void divideTriangle(vector<Vertex>& vertices, unsigned int vertexIndex, vector<unsigned int>& indices,
@@ -568,7 +568,7 @@ namespace theisland
 			grass->addUniqueComponent(move(mesh));
 			grass->addUniqueComponent(move(bounds));
 
-			Simplicity::addEntity(move(grass));
+			Simplicity::getScene()->addEntity(move(grass));
 		}
 
 		void growTree(const vector<Vertex>& vertices, unsigned int vertexIndex)

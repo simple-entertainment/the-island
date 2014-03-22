@@ -150,11 +150,11 @@ namespace theisland
 			setPosition(tree->getTransform(), position);
 			tree->addSharedComponent(trunk);
 			tree->addSharedComponent(bounds[treeIndex]);
-			Simplicity::addEntity(move(tree));
+			Simplicity::getScene()->addEntity(move(tree));
 
 			for (unsigned int index = 0; index < branches.size(); index++)
 			{
-				Simplicity::addEntity(move(branches[index]), *rawTree);
+				Simplicity::getScene()->addEntity(move(branches[index]), *rawTree);
 			}
 		}
 
