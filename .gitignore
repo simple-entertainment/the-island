@@ -1,5 +1,8 @@
 # Eclipse project management
 *.metadata
 *.settings
-the-island/Debug
+the-island/Debug (Linux)
+the-island/Debug (Windows)
+the-island/Release (Linux)
+the-island/Release (Windows)
 
