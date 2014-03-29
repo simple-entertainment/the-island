@@ -23,7 +23,7 @@ namespace theisland
 {
 	namespace EntityCategories
 	{
-		unsigned short GROUND = simplicity::Categories::USER_ID_0;
+		static unsigned short GROUND = simplicity::Categories::USER_ID_0;
 	}
 }
 
