@@ -25,7 +25,7 @@ namespace theisland
 {
 	namespace IslandFactory
 	{
-		void createIsland(unsigned int radius, const std::vector<float>& profile, unsigned int chunkSize = 16);
+		SIMPLE_API void createIsland(unsigned int radius, const std::vector<float>& profile, unsigned int chunkSize = 16);
 	}
 }
 

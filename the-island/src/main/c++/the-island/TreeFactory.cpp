@@ -80,7 +80,7 @@ namespace theisland
 				{
 					segmentCenter += branch.getVertices()[index].position;
 				}
-				segmentCenter /= verticesInTrunkSegment;
+				segmentCenter /= static_cast<float>(verticesInTrunkSegment);
 
 				float scale = (1.0f - ((float) segment / SEGMENTS)) * 0.5f;
 
@@ -109,7 +109,7 @@ namespace theisland
 			return shared_ptr<Mesh>(move(leaf));
 		}
 
-		void createTree(const Vector3& position, float age)
+		void createTree(const Vector3& position)
 		{
 			unsigned int verticesInTrunkSegment = SEGMENT_DIVISIONS * 4;
 
@@ -133,7 +133,7 @@ namespace theisland
 				{
 					segmentCenter += trunk->getVertices()[index].position;
 				}
-				segmentCenter /= verticesInTrunkSegment;
+				segmentCenter /= static_cast<float>(verticesInTrunkSegment);
 
 				float angleY = MathConstants::PI * getRandomFloat(0.0f, 2.0f);
 				float scale = (1.0f - ((float) segment / SEGMENTS)) * 0.5f;

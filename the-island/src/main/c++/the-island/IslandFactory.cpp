@@ -43,8 +43,7 @@ namespace theisland
 		void growTree(const vector<Vertex>& vertices, unsigned int vertexIndex);
 		void initializeMaps(vector<vector<float>>& heightMap, vector<vector<float>>& slopeMap, unsigned int edgeLength);
 		void setHeight(unsigned int radius, const vector<float>& profile, unsigned int x, unsigned int z,
-				vector<vector<float>>& heightMap, vector<vector<float>>& slopeMap, float heightFactor,
-				float slopeFactor);
+				vector<vector<float>>& heightMap, vector<vector<float>>& slopeMap, float heightFactor);
 		void smoothen(vector<Vertex>& vertices, unsigned int vertexIndex);
 		Vector3 getSmoothNormal(const vector<Vertex>& vertices, unsigned int x, unsigned int z);
 
@@ -326,7 +325,7 @@ namespace theisland
 																slopeFactor);
 						}
 
-						setHeight(radius, profile, x, z, heightMap, slopeMap, heightFactor, slopeFactor);
+						setHeight(radius, profile, x, z, heightMap, slopeMap, heightFactor);
 					}
 				}
 			}
@@ -403,7 +402,7 @@ namespace theisland
 		Vector3 getSmoothNormal(const vector<Vertex>& vertices, unsigned int x, unsigned int z)
 		{
 			unsigned int verticesPerGridElement = 6;
-			unsigned int edgeLength = sqrt(vertices.size() / verticesPerGridElement);
+			unsigned int edgeLength = static_cast<unsigned int>(sqrt(vertices.size() / verticesPerGridElement));
 			unsigned int gridElement = x * edgeLength + z;
 
 			Vector3 normal(0.0f, 0.0f, 0.0f);
@@ -581,7 +580,7 @@ namespace theisland
 			{
 				center.Y() -= 0.1f;
 
-				TreeFactory::createTree(center, getRandomFloat(100.0f, 200.0f));
+				TreeFactory::createTree(center);
 			}
 		}
 
@@ -605,8 +604,7 @@ namespace theisland
 		}
 
 		void setHeight(unsigned int radius, const vector<float>& profile, unsigned int x, unsigned int z,
-				vector<vector<float>>& heightMap, vector<vector<float>>& slopeMap, float heightFactor,
-				float slopeFactor)
+				vector<vector<float>>& heightMap, vector<vector<float>>& slopeMap, float heightFactor)
 		{
 			if (getRandomBool(0.8f))
 			{
@@ -615,7 +613,7 @@ namespace theisland
 			else
 			{
 				float distance = floor(sqrt(pow(fabs((float) radius - x), 2) + pow(fabs((float) radius - z), 2)));
-				heightMap[x][z] = profile[distance];
+				heightMap[x][z] = profile[static_cast<unsigned int>(distance)];
 			}
 
 			float randomization = getRandomFloat(-0.1f, 0.1f);
@@ -627,7 +625,7 @@ namespace theisland
 		void smoothen(vector<Vertex>& vertices, unsigned int vertexIndex)
 		{
 			unsigned int gridElement = vertexIndex / 6;
-			unsigned int edgeLength = sqrt(vertices.size() / 6);
+			unsigned int edgeLength = static_cast<unsigned int>(sqrt(vertices.size() / 6));
 
 			unsigned int x = gridElement / edgeLength;
 			unsigned int z = gridElement % edgeLength;

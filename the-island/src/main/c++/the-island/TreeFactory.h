@@ -25,7 +25,7 @@ namespace theisland
 {
 	namespace TreeFactory
 	{
-		void createTree(const simplicity::Vector3& position, float age);
+		SIMPLE_API void createTree(const simplicity::Vector3& position);
 	}
 }
 
