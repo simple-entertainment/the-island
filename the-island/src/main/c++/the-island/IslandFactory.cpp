@@ -162,7 +162,6 @@ namespace theisland
 					material.restitution = 0.5f;
 					unique_ptr<Body> body = PhysicsFactory::getInstance()->createBody(material, mesh.get(),
 							chunk->getTransform(), false);
-					body->setEntity(chunk.get());
 
 					chunk->addUniqueComponent(move(mesh));
 					chunk->addUniqueComponent(move(bounds));
