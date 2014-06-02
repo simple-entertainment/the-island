@@ -46,7 +46,8 @@ namespace theisland
 			unsigned int treeIndex = getRandomInt(0, TRUNK_COUNT - 1);
 			shared_ptr<Mesh> trunk = trunks[treeIndex];
 			shared_ptr<Mesh> leaf = leaves[treeIndex];
-			unique_ptr<Model> bounds = ModelFunctions::getSquareBoundsXZ(trunk->getVertices());
+			unique_ptr<Model> bounds =
+				ModelFunctions::getSquareBoundsXZ(trunk->getVertices(), trunk->getVertexCount());
 
 			Vector3 scaleVector(1.0f, 1.0f, 1.0f);
 			scaleVector *= scale;
@@ -246,7 +247,8 @@ namespace theisland
 			{
 				shared_ptr<Mesh> trunk = createTrunk();
 				shared_ptr<Mesh> leaf = createLeaf(*trunk);
-				shared_ptr<Model> bound(move(ModelFunctions::getCircleBoundsXZ(trunk->getVertices())));
+				shared_ptr<Model> bound =
+					ModelFunctions::getCircleBoundsXZ(trunk->getVertices(), trunk->getVertexCount());
 
 				trunks.push_back(trunk);
 				leaves.push_back(leaf);

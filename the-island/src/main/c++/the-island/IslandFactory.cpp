@@ -26,10 +26,9 @@ namespace theisland
 {
 	namespace IslandFactory
 	{
-		void addDetail(vector<Vertex>& vertices, unsigned int vertexIndex, vector<unsigned int>& indices);
+		void addDetail(Mesh& mesh, unsigned int vertexIndex);
 		unsigned int adjustIndex(unsigned int index, int adjustment, string adjustmentAxis, string axis, int direction);
-		void divideTriangle(vector<Vertex>& vertices, unsigned int vertexIndex, vector<unsigned int>& indices,
-				unsigned int maxDepth, unsigned int depth);
+		void divideTriangle(Mesh& mesh, unsigned int vertexIndex, unsigned int maxDepth, unsigned int depth);
 		void fillHeightMapSector(unsigned int radius, const vector<float>& profile, vector<vector<float>>& heightMap,
 				vector<vector<float>>& slopeMap, string axis, int direction);
 		float getAdjusted(const vector<vector<float>>& heightMap, unsigned int x, unsigned int z, int adjustment,
@@ -37,18 +36,20 @@ namespace theisland
 		void getFactors(unsigned int x, unsigned int z, const vector<vector<float>>& heightMap,
 				const vector<vector<float>>& slopeMap, string axis, int direction, unsigned int beginIndex,
 				unsigned int endIndex, float& heightFactor, float& slopeFactor);
+		Vector3 getSmoothNormal(const vector<Vertex>& vertices, unsigned int vertexCount, unsigned int x, unsigned int z);
 		void getTraversalIndices(unsigned int radius, unsigned int currentRadius, string axis, int direction,
 				unsigned int& beginIndexX, unsigned int& endIndexX, unsigned int& beginIndexZ, unsigned int& endIndexZ);
 		void growGrass(const vector<Vertex>& vertices, unsigned int vertexIndex);
-		void growTree(const vector<Vertex>& vertices, unsigned int vertexIndex);
+		void growTree(const Vertex* vertices, unsigned int vertexIndex);
 		void initializeMaps(vector<vector<float>>& heightMap, vector<vector<float>>& slopeMap, unsigned int edgeLength);
 		void setHeight(unsigned int radius, const vector<float>& profile, unsigned int x, unsigned int z,
 				vector<vector<float>>& heightMap, vector<vector<float>>& slopeMap, float heightFactor);
-		void smoothen(vector<Vertex>& vertices, unsigned int vertexIndex);
-		Vector3 getSmoothNormal(const vector<Vertex>& vertices, unsigned int x, unsigned int z);
+		void smoothen(Vertex* vertices, unsigned int vertexCount, unsigned int vertexIndex);
 
-		void addDetail(vector<Vertex>& vertices, unsigned int vertexIndex, vector<unsigned int>& indices)
+		void addDetail(Mesh& mesh, unsigned int vertexIndex)
 		{
+			Vertex* vertices = mesh.getVertices();
+
 			Vector3 up(0.0, 1.0, 0.0);
 			Vector3 center = (vertices[vertexIndex].position + vertices[vertexIndex + 1].position +
 					vertices[vertexIndex + 2].position) / 3.0f;
@@ -69,10 +70,13 @@ namespace theisland
 				vertices[vertexIndex + 1].color = Vector4(0.6f, 0.6f, 0.6f, 1.0f);
 				vertices[vertexIndex + 2].color = Vector4(0.6f, 0.6f, 0.6f, 1.0f);
 
-				divideTriangle(vertices, vertexIndex, indices, 3, 1);
+				divideTriangle(mesh, vertexIndex, 3, 1);
 
 				return;
 			}
+
+			// Dividing the triangles for the cliffs invalidated the old pointer.
+			vertices = mesh.getVertices();
 
 			// Snow!
 			if (maxY > 20.0f)
@@ -81,7 +85,7 @@ namespace theisland
 				vertices[vertexIndex + 1].color = Vector4(0.9f, 0.9f, 0.9f, 1.0f);
 				vertices[vertexIndex + 2].color = Vector4(0.9f, 0.9f, 0.9f, 1.0f);
 
-				smoothen(vertices, vertexIndex);
+				smoothen(vertices, mesh.getVertexCount(), vertexIndex);
 
 				return;
 			}
@@ -94,7 +98,7 @@ namespace theisland
 				vertices[vertexIndex + 1].color = Vector4(0.83f, 0.65f, 0.15f, 1.0f);
 				vertices[vertexIndex + 2].color = Vector4(0.83f, 0.65f, 0.15f, 1.0f);
 
-				smoothen(vertices, vertexIndex);
+				smoothen(vertices, mesh.getVertexCount(), vertexIndex);
 
 				return;
 			}
@@ -108,7 +112,7 @@ namespace theisland
 				growTree(vertices, vertexIndex);
 			}
 
-			smoothen(vertices, vertexIndex);
+			smoothen(vertices, mesh.getVertexCount(), vertexIndex);
 		}
 
 		unsigned int adjustIndex(unsigned int index, int adjustment, string adjustmentAxis, string axis, int direction)
@@ -148,13 +152,14 @@ namespace theisland
 					unique_ptr<Mesh> mesh = ModelFactory::getInstance().createHeightMapMesh(heightMap, x,
 							x + chunkSize, z, z + chunkSize, Vector4(0.0f, 0.5f, 0.0f, 1.0f));
 
-					unsigned int vertexCount = mesh->getVertices().size();
-					for (unsigned int vertexIndex = 0; vertexIndex < vertexCount; vertexIndex += 3)
+					unsigned int originalVertexCount = mesh->getVertexCount();
+					for (unsigned int vertexIndex = 0; vertexIndex < originalVertexCount; vertexIndex += 3)
 					{
-						addDetail(mesh->getVertices(), vertexIndex, mesh->getIndices());
+						addDetail(*mesh, vertexIndex);
 					}
 
-					unique_ptr<Model> bounds = ModelFunctions::getSquareBoundsXZ(mesh->getVertices());
+					unique_ptr<Model> bounds =
+						ModelFunctions::getSquareBoundsXZ(mesh->getVertices(), mesh->getVertexCount());
 
 					Body::Material material;
 					material.mass = 0.0f;
@@ -195,9 +200,11 @@ namespace theisland
 			Simplicity::getScene()->addEntity(move(ocean));
 		}
 
-		void divideTriangle(vector<Vertex>& vertices, unsigned int vertexIndex, vector<unsigned int>& indices,
-				unsigned int maxDepth, unsigned int depth)
+		void divideTriangle(Mesh& mesh, unsigned int vertexIndex, unsigned int maxDepth, unsigned int depth)
 		{
+			unsigned int vertexCount = mesh.getVertexCount();
+			Vertex* vertices = mesh.getVertices();
+
 			Vector3 center = (vertices[vertexIndex].position + vertices[vertexIndex + 1].position +
 					vertices[vertexIndex + 2].position) / 3.0f;
 
@@ -254,28 +261,34 @@ namespace theisland
 
 			if (depth == 1)
 			{
-				vertices.resize(vertices.size() + 6);
-				copy(begin(triangle0), end(triangle0), vertices.begin() + vertexIndex);
-				copy(begin(triangle1), end(triangle1), vertices.end() - 6);
-				copy(begin(triangle2), end(triangle2), vertices.end() - 3);
+				mesh.resizeVertices(vertexCount + 6);
+				vertexCount = mesh.getVertexCount();
+				vertices = mesh.getVertices();
 
-				indices.resize(indices.size() + 6);
+				memcpy(&vertices[vertexIndex], triangle0, sizeof(triangle0));
+				memcpy(&vertices[vertexCount - 6], triangle1, sizeof(triangle1));
+				memcpy(&vertices[vertexCount - 3], triangle2, sizeof(triangle2));
+
+				mesh.resizeIndices(mesh.getIndexCount() + 6);
 				for (int index = 6; index > 0; index--)
 				{
-					indices[indices.size() - index] = vertices.size() - index;
+					mesh.getIndices()[mesh.getIndexCount() - index] = vertexCount - index;
 				}
 			}
 			else
 			{
-				vertices.resize(vertices.size() + 9);
-				copy(begin(triangle0), end(triangle0), vertices.end() - 9);
-				copy(begin(triangle1), end(triangle1), vertices.end() - 6);
-				copy(begin(triangle2), end(triangle2), vertices.end() - 3);
+				mesh.resizeVertices(vertexCount + 9);
+				vertexCount = mesh.getVertexCount();
+				vertices = mesh.getVertices();
 
-				indices.resize(indices.size() + 9);
+				memcpy(&vertices[vertexCount - 9], triangle0, sizeof(triangle0));
+				memcpy(&vertices[vertexCount - 6], triangle1, sizeof(triangle1));
+				memcpy(&vertices[vertexCount - 3], triangle2, sizeof(triangle2));
+
+				mesh.resizeIndices(mesh.getIndexCount() + 9);
 				for (int index = 9; index > 0; index--)
 				{
-					indices[indices.size() - index] = vertices.size() - index;
+					mesh.getIndices()[mesh.getIndexCount() - index] = vertexCount - index;
 				}
 			}
 
@@ -283,15 +296,19 @@ namespace theisland
 			{
 				if (depth == 1)
 				{
-					divideTriangle(vertices, vertexIndex, indices, maxDepth, depth + 1);
+					divideTriangle(mesh, vertexIndex, maxDepth, depth + 1);
+					vertices = mesh.getVertices();
 				}
 				else
 				{
-					divideTriangle(vertices, vertices.size() - 9, indices, maxDepth, depth + 1);
+					divideTriangle(mesh, vertexCount - 9, maxDepth, depth + 1);
+					vertices = mesh.getVertices();
 				}
 
-				divideTriangle(vertices, vertices.size() - 6, indices, maxDepth, depth + 1);
-				divideTriangle(vertices, vertices.size() - 3, indices, maxDepth, depth + 1);
+				divideTriangle(mesh, vertexCount - 6, maxDepth, depth + 1);
+				vertices = mesh.getVertices();
+				divideTriangle(mesh, vertexCount - 3, maxDepth, depth + 1);
+				vertices = mesh.getVertices();
 			}
 		}
 
@@ -398,10 +415,10 @@ namespace theisland
 			}
 		}
 
-		Vector3 getSmoothNormal(const vector<Vertex>& vertices, unsigned int x, unsigned int z)
+		Vector3 getSmoothNormal(const Vertex* vertices, unsigned int vertexCount, unsigned int x, unsigned int z)
 		{
 			unsigned int verticesPerGridElement = 6;
-			unsigned int edgeLength = static_cast<unsigned int>(sqrt(vertices.size() / verticesPerGridElement));
+			unsigned int edgeLength = static_cast<unsigned int>(sqrt(vertexCount / verticesPerGridElement));
 			unsigned int gridElement = x * edgeLength + z;
 
 			Vector3 normal(0.0f, 0.0f, 0.0f);
@@ -562,14 +579,14 @@ namespace theisland
 			}
 
 			unique_ptr<Mesh> mesh = ModelFactory::getInstance().createMesh(bladeVertices, bladeIndices);
-			unique_ptr<Model> bounds = ModelFunctions::getCircleBoundsXZ(mesh->getVertices());
+			unique_ptr<Model> bounds = ModelFunctions::getCircleBoundsXZ(mesh->getVertices(), mesh->getVertexCount());
 			grass->addUniqueComponent(move(mesh));
 			grass->addUniqueComponent(move(bounds));
 
 			Simplicity::getScene()->addEntity(move(grass));
 		}
 
-		void growTree(const vector<Vertex>& vertices, unsigned int vertexIndex)
+		void growTree(const Vertex* vertices, unsigned int vertexIndex)
 		{
 			Vector3 center = (vertices[vertexIndex].position + vertices[vertexIndex + 1].position +
 					vertices[vertexIndex + 2].position) / 3.0f;
@@ -621,25 +638,25 @@ namespace theisland
 			slopeMap[x][z] = heightMap[x][z] - heightFactor;
 		}
 
-		void smoothen(vector<Vertex>& vertices, unsigned int vertexIndex)
+		void smoothen(Vertex* vertices, unsigned int vertexCount, unsigned int vertexIndex)
 		{
 			unsigned int gridElement = vertexIndex / 6;
-			unsigned int edgeLength = static_cast<unsigned int>(sqrt(vertices.size() / 6));
+			unsigned int edgeLength = static_cast<unsigned int>(sqrt(vertexCount / 6));
 
 			unsigned int x = gridElement / edgeLength;
 			unsigned int z = gridElement % edgeLength;
 
 			if (vertexIndex % 2 == 0)
 			{
-				vertices[vertexIndex].normal = getSmoothNormal(vertices, x, z);
-				vertices[vertexIndex + 1].normal = getSmoothNormal(vertices, x, z + 1);
-				vertices[vertexIndex + 2].normal = getSmoothNormal(vertices, x + 1, z + 1);
+				vertices[vertexIndex].normal = getSmoothNormal(vertices, vertexCount, x, z);
+				vertices[vertexIndex + 1].normal = getSmoothNormal(vertices, vertexCount, x, z + 1);
+				vertices[vertexIndex + 2].normal = getSmoothNormal(vertices, vertexCount, x + 1, z + 1);
 			}
 			else
 			{
-				vertices[vertexIndex].normal = getSmoothNormal(vertices, x, z);
-				vertices[vertexIndex + 1].normal = getSmoothNormal(vertices, x + 1, z + 1);
-				vertices[vertexIndex + 2].normal = getSmoothNormal(vertices, x + 1, z);
+				vertices[vertexIndex].normal = getSmoothNormal(vertices, vertexCount, x, z);
+				vertices[vertexIndex + 1].normal = getSmoothNormal(vertices, vertexCount, x + 1, z + 1);
+				vertices[vertexIndex + 2].normal = getSmoothNormal(vertices, vertexCount, x + 1, z);
 			}
 		}
 	}

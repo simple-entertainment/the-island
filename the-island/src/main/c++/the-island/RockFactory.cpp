@@ -37,7 +37,7 @@ namespace theisland
 				}
 			}
 
-			vector<Vertex>& vertices = mesh->getVertices();
+			Vertex* vertices = mesh->getVertices();
 			for (unsigned int latitude = 0; latitude < 10; latitude++)
 			{
 				for (unsigned int longitude = 0; longitude < 10; longitude++)
@@ -61,7 +61,7 @@ namespace theisland
 				}
 			}
 
-			unique_ptr<Model> bounds = ModelFunctions::getCircleBoundsXZ(mesh->getVertices());
+			unique_ptr<Model> bounds = ModelFunctions::getCircleBoundsXZ(mesh->getVertices(), mesh->getVertexCount());
 
 			unique_ptr<Entity> rock(new Entity);
 			setPosition(rock->getTransform(), position);

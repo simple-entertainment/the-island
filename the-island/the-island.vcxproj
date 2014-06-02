@@ -84,7 +84,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>../../simplicity/simplicity/src/main/c++</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4251;4351</DisableSpecificWarnings>
-      <PreprocessorDefinitions>SIMPLE_SHARED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SCL_SECURE_NO_WARNINGS;SIMPLE_SHARED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -97,6 +97,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>../../simplicity/simplicity/src/main/c++</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4251;4351</DisableSpecificWarnings>
+      <PreprocessorDefinitions>_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -111,7 +112,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>../../simplicity/simplicity/src/main/c++</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4251;4351</DisableSpecificWarnings>
-      <PreprocessorDefinitions>SIMPLE_SHARED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SCL_SECURE_NO_WARNINGS;SIMPLE_SHARED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -128,6 +129,7 @@
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>../../simplicity/simplicity/src/main/c++</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4251;4351</DisableSpecificWarnings>
+      <PreprocessorDefinitions>_SCL_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
