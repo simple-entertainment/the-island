@@ -150,7 +150,8 @@ namespace theisland
 				{
 					unique_ptr<Entity> chunk(new Entity(EntityCategories::GROUND));
 					unique_ptr<Mesh> mesh = ModelFactory::getInstance().createHeightMapMesh(heightMap, x,
-							x + chunkSize, z, z + chunkSize, Vector4(0.0f, 0.5f, 0.0f, 1.0f));
+							x + chunkSize, z, z + chunkSize, Vector4(0.0f, 0.5f, 0.0f, 1.0f),
+							Mesh::Access::READ_LOCAL);
 
 					unsigned int originalVertexCount = mesh->getVertexCount();
 					for (unsigned int vertexIndex = 0; vertexIndex < originalVertexCount; vertexIndex += 3)
