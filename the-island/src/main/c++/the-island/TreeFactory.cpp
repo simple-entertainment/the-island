@@ -46,8 +46,7 @@ namespace theisland
 			unsigned int treeIndex = getRandomInt(0, TRUNK_COUNT - 1);
 			shared_ptr<Mesh> trunk = trunks[treeIndex];
 			shared_ptr<Mesh> leaf = leaves[treeIndex];
-			unique_ptr<Model> bounds =
-				ModelFunctions::getSquareBoundsXZ(trunk->getVertices(), trunk->getVertexCount());
+			shared_ptr<Model> bounds = TreeFactory::bounds[treeIndex];
 
 			Vector3 scaleVector(1.0f, 1.0f, 1.0f);
 			scaleVector *= scale;
@@ -60,7 +59,7 @@ namespace theisland
 
 			branch->addSharedComponent(trunk);
 			branch->addSharedComponent(leaf);
-			branch->addUniqueComponent(move(bounds));
+			branch->addSharedComponent(bounds);
 
 			return move(branch);
 		}
@@ -68,9 +67,24 @@ namespace theisland
 		shared_ptr<Mesh> createLeaf(const Mesh& branch)
 		{
 			unsigned int verticesInTrunkSegment = SEGMENT_DIVISIONS * 4;
+			unsigned int vertexCount = SEGMENTS * 6;
+			unsigned int indexCount = SEGMENTS * 12;
+
+			// Copy the branch vertex data to a local vector... argggh!
+			// I think it would have been OK at the moment but if we put the branch and the leaf in the same buffer...
+			// there be dragons!
+			const MeshData& branchData = branch.getData();
+			vector<Vertex> branchVertices(branchData.vertexCount);
+			memcpy(branchVertices.data(), branchData.vertexData, branchData.vertexCount * sizeof(Vertex));
+			branch.releaseData();
+
+			shared_ptr<MeshBuffer> leafBuffer = ModelFactory::getInstance()->createBuffer(vertexCount, indexCount);
+			unique_ptr<Mesh> leaf(new Mesh(leafBuffer));
+			MeshData& leafData = leaf->getData(false, true);
 
 			// Vertices
-			vector<Vertex> vertices(SEGMENTS * 6);
+			leafData.vertexCount = vertexCount;
+
 			for (unsigned int segment = 0; segment < SEGMENTS; segment++)
 			{
 				// Find the center of the segment because that's where we want the leaves to originate from.
@@ -79,34 +93,36 @@ namespace theisland
 
 				for (unsigned int index = indexOffset; index < indexOffset + verticesInTrunkSegment; index++)
 				{
-					segmentCenter += branch.getVertices()[index].position;
+					segmentCenter += branchVertices[index].position;
 				}
 				segmentCenter /= static_cast<float>(verticesInTrunkSegment);
 
 				float scale = (1.0f - ((float) segment / SEGMENTS)) * 0.5f;
 
 				float saturation0 = getRandomFloat(0.25f, 0.75f);
-				ModelFactory::insertTriangleVertices(vertices, segment * 6,
+				ModelFactory::insertTriangleVertices(leafData.vertexData, segment * 6,
 						segmentCenter + Vector3(scale * 10.0f, 0.0f, 0.0f), Vector3(-scale * 10.0f, scale * 2.0f, 0.0f),
 						Vector3(-scale * 10.0f, -scale * 2.0f, 0.0f), Vector4(0.0f, saturation0, 0.0f, 1.0f));
 
 				float saturation1 = getRandomFloat(0.25f, 0.75f);
-				ModelFactory::insertTriangleVertices(vertices, segment * 6 + 3,
+				ModelFactory::insertTriangleVertices(leafData.vertexData, segment * 6 + 3,
 						segmentCenter + Vector3(-scale * 10.0f, 0.0f, 0.0f), Vector3(scale * 10.0f, scale * 2.0f, 0.0f),
 						Vector3(scale * 10.0f, -scale * 2.0f, 0.0f), Vector4(0.0f, saturation1, 0.0f, 1.0f));
 			}
 
 			// Indices
-			vector<unsigned int> indices(SEGMENTS * 12);
+			leafData.indexCount = indexCount;
+
 			for (unsigned int segment = 0; segment < SEGMENTS; segment++)
 			{
-				ModelFactory::insertTriangleIndices(indices, segment * 12, segment * 6);
-				ModelFactory::insertTriangleIndices(indices, segment * 12 + 3, segment * 6, true);
-				ModelFactory::insertTriangleIndices(indices, segment * 12 + 6, segment * 6 + 3);
-				ModelFactory::insertTriangleIndices(indices, segment * 12 + 9, segment * 6 + 3, true);
+				ModelFactory::insertTriangleIndices(leafData.indexData, segment * 12, segment * 6);
+				ModelFactory::insertTriangleIndices(leafData.indexData, segment * 12 + 3, segment * 6, true);
+				ModelFactory::insertTriangleIndices(leafData.indexData, segment * 12 + 6, segment * 6 + 3);
+				ModelFactory::insertTriangleIndices(leafData.indexData, segment * 12 + 9, segment * 6 + 3, true);
 			}
 
-			unique_ptr<Mesh> leaf = ModelFactory::getInstance().createMesh(vertices, indices);
+			leaf->releaseData();
+
 			return shared_ptr<Mesh>(move(leaf));
 		}
 
@@ -121,6 +137,7 @@ namespace theisland
 
 			unsigned int treeIndex = getRandomInt(0, TRUNK_COUNT - 1);
 			shared_ptr<Mesh> trunk = trunks[treeIndex];
+			const MeshData& trunkData = trunk->getData();
 
 			// Add branches
 			vector<unique_ptr<Entity>> branches;
@@ -132,7 +149,7 @@ namespace theisland
 
 				for (unsigned int index = indexOffset; index < indexOffset + verticesInTrunkSegment; index++)
 				{
-					segmentCenter += trunk->getVertices()[index].position;
+					segmentCenter += trunkData.vertexData[index].position;
 				}
 				segmentCenter /= static_cast<float>(verticesInTrunkSegment);
 
@@ -144,6 +161,8 @@ namespace theisland
 					angleY += MathConstants::PI * 2.0f / 3.0f;
 				}
 			}
+
+			trunk->releaseData();
 
 			// Assemble the tree!
 			unique_ptr<Entity> tree(new Entity);
@@ -161,6 +180,20 @@ namespace theisland
 
 		shared_ptr<Mesh> createTrunk()
 		{
+			unsigned int verticesInTrunkSegment = SEGMENT_DIVISIONS * 4;
+			unsigned int verticesInTrunkSegments = verticesInTrunkSegment * SEGMENTS;
+			unsigned int verticesInTrunkTop = SEGMENT_DIVISIONS + 1;
+			unsigned int vertexCount = verticesInTrunkSegments + verticesInTrunkTop;
+
+			unsigned int indicesInTrunkSegment = SEGMENT_DIVISIONS * 6;
+			unsigned int indicesInTrunkSegments = indicesInTrunkSegment * SEGMENTS;
+			unsigned int indicesInTrunkTop = SEGMENT_DIVISIONS * 3;
+			unsigned int indexCount = indicesInTrunkSegments + indicesInTrunkTop;
+
+			shared_ptr<MeshBuffer> trunkBuffer = ModelFactory::getInstance()->createBuffer(vertexCount, indexCount);
+			unique_ptr<Mesh> trunk(new Mesh(trunkBuffer));
+			MeshData& trunkData = trunk->getData(false, true);
+
 			Vector4 color(0.47f, 0.24f, 0.0f, 1.0f);
 
 			float segmentHeight = 2.5f;
@@ -169,10 +202,7 @@ namespace theisland
 			float segmentRadiusDelta = segmentRadius / SEGMENTS;
 
 			// Vertices
-			unsigned int verticesInTrunkSegment = SEGMENT_DIVISIONS * 4;
-			unsigned int verticesInTrunkSegments = verticesInTrunkSegment * SEGMENTS;
-			unsigned int verticesInTrunkTop = SEGMENT_DIVISIONS + 1;
-			vector<Vertex> vertices(verticesInTrunkSegments + verticesInTrunkTop);
+			trunkData.vertexCount = vertexCount;
 
 			// Trunk Sides
 			vector<unique_ptr<Entity>> branches;
@@ -181,7 +211,7 @@ namespace theisland
 			{
 				unsigned int indexOffset = segment * verticesInTrunkSegment;
 
-				ModelFactory::insertTunnelVertices(vertices, indexOffset, segmentRadius, segmentHeight,
+				ModelFactory::insertTunnelVertices(trunkData.vertexData, indexOffset, segmentRadius, segmentHeight,
 						SEGMENT_DIVISIONS, center, color);
 
 				if (segment > 0)
@@ -189,10 +219,10 @@ namespace theisland
 					unsigned int indexOffsetPrevious = (segment - 1) * verticesInTrunkSegment;
 					for (unsigned int segmentDivision = 0; segmentDivision < SEGMENT_DIVISIONS; segmentDivision++)
 					{
-						vertices[indexOffsetPrevious + segmentDivision * 4 + 1].position =
-								vertices[indexOffset + segmentDivision * 4].position;
-						vertices[indexOffsetPrevious + segmentDivision * 4 + 3].position =
-								vertices[indexOffset + segmentDivision * 4 + 2].position;
+						trunkData.vertexData[indexOffsetPrevious + segmentDivision * 4 + 1].position =
+								trunkData.vertexData[indexOffset + segmentDivision * 4].position;
+						trunkData.vertexData[indexOffsetPrevious + segmentDivision * 4 + 3].position =
+								trunkData.vertexData[indexOffset + segmentDivision * 4 + 2].position;
 
 						// TODO correct normals too...
 					}
@@ -211,17 +241,15 @@ namespace theisland
 			}
 
 			// Trunk Top
-			ModelFactory::insertCircleVertices(vertices, verticesInTrunkSegments, segmentRadius, SEGMENT_DIVISIONS,
-					center, color);
+			ModelFactory::insertCircleVertices(trunkData.vertexData, verticesInTrunkSegments, segmentRadius,
+					SEGMENT_DIVISIONS, center, color);
 
 			// Rotate so it's standing upright
-			ModelFunctions::rotateVertices(vertices, MathConstants::PI * 0.5f, Vector3(1.0f, 0.0f, 0.0f));
+			ModelFunctions::rotateVertices(trunkData.vertexData, trunkData.vertexCount, MathConstants::PI * 0.5f,
+					Vector3(1.0f, 0.0f, 0.0f));
 
 			// Indices
-			unsigned int indicesInTrunkSegment = SEGMENT_DIVISIONS * 6;
-			unsigned int indicesInTrunkSegments = indicesInTrunkSegment * SEGMENTS;
-			unsigned int indicesInTrunkTop = SEGMENT_DIVISIONS * 3;
-			vector<unsigned int> indices(indicesInTrunkSegments + indicesInTrunkTop);
+			trunkData.indexCount = indexCount;
 
 			// Trunk Sides
 			for (unsigned int segment = 0; segment < SEGMENTS; segment++)
@@ -229,14 +257,16 @@ namespace theisland
 				unsigned int indexOffset = segment * indicesInTrunkSegment;
 				unsigned int vertexIndexOffset = segment * verticesInTrunkSegment;
 
-				ModelFactory::insertTunnelIndices(indices, indexOffset, vertexIndexOffset, SEGMENT_DIVISIONS);
+				ModelFactory::insertTunnelIndices(trunkData.indexData, indexOffset, vertexIndexOffset,
+						SEGMENT_DIVISIONS);
 			}
 
 			// Trunk Top
-			ModelFactory::insertCircleIndices(indices, indicesInTrunkSegments, verticesInTrunkSegments,
+			ModelFactory::insertCircleIndices(trunkData.indexData, indicesInTrunkSegments, verticesInTrunkSegments,
 					SEGMENT_DIVISIONS, true);
 
-			unique_ptr<Mesh> trunk = ModelFactory::getInstance().createMesh(vertices, indices);
+			trunk->releaseData();
+
 			return shared_ptr<Mesh>(move(trunk));
 		}
 
@@ -247,8 +277,11 @@ namespace theisland
 			{
 				shared_ptr<Mesh> trunk = createTrunk();
 				shared_ptr<Mesh> leaf = createLeaf(*trunk);
+
+				const MeshData& trunkData = trunk->getData();
 				shared_ptr<Model> bound =
-					ModelFunctions::getCircleBoundsXZ(trunk->getVertices(), trunk->getVertexCount());
+					ModelFunctions::getCircleBoundsXZ(trunkData.vertexData, trunkData.vertexCount);
+				trunk->releaseData();
 
 				trunks.push_back(trunk);
 				leaves.push_back(leaf);

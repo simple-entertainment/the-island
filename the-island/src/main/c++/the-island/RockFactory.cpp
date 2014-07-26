@@ -25,8 +25,9 @@ namespace theisland
 	{
 		void createRock(const Vector3& position, float radius)
 		{
-			unique_ptr<Mesh> mesh = ModelFactory::getInstance().createSphereMesh(radius, 10,
+			unique_ptr<Mesh> mesh = ModelFactory::getInstance()->createSphereMesh(radius, 10, shared_ptr<MeshBuffer>(),
 					Vector4(0.6f, 0.6f, 0.6f, 1.0f), false);
+			MeshData& meshData = mesh->getData(false, true);
 
 			float variance[10][10];
 			for (unsigned int latitude = 0; latitude < 10; latitude++)
@@ -37,31 +38,34 @@ namespace theisland
 				}
 			}
 
-			Vertex* vertices = mesh->getVertices();
 			for (unsigned int latitude = 0; latitude < 10; latitude++)
 			{
 				for (unsigned int longitude = 0; longitude < 10; longitude++)
 				{
 					unsigned int segmentIndex = (latitude * 10 + longitude) * 4;
 
-					vertices[segmentIndex].position *= variance[latitude][longitude];
-					vertices[segmentIndex + 1].position *= variance[(latitude + 1) % 10][longitude];
-					vertices[segmentIndex + 2].position *= variance[(latitude + 1) % 10][(longitude + 1) % 10];
-					vertices[segmentIndex + 3].position *= variance[latitude][(longitude + 1) % 10];
+					meshData.vertexData[segmentIndex].position *= variance[latitude][longitude];
+					meshData.vertexData[segmentIndex + 1].position *= variance[(latitude + 1) % 10][longitude];
+					meshData.vertexData[segmentIndex + 2].position *= variance[(latitude + 1) % 10][(longitude + 1) % 10];
+					meshData.vertexData[segmentIndex + 3].position *= variance[latitude][(longitude + 1) % 10];
 
-					Vector3 edge0 = vertices[segmentIndex + 1].position - vertices[segmentIndex].position;
-					Vector3 edge1 = vertices[segmentIndex + 2].position - vertices[segmentIndex].position;
+					Vector3 edge0 = meshData.vertexData[segmentIndex + 1].position -
+							meshData.vertexData[segmentIndex].position;
+					Vector3 edge1 = meshData.vertexData[segmentIndex + 2].position -
+							meshData.vertexData[segmentIndex].position;
 					Vector3 normal = crossProduct(edge0, edge1);
 					normal.normalize();
 
-					vertices[segmentIndex].normal = normal;
-					vertices[segmentIndex + 1].normal = normal;
-					vertices[segmentIndex + 2].normal = normal;
-					vertices[segmentIndex + 3].normal = normal;
+					meshData.vertexData[segmentIndex].normal = normal;
+					meshData.vertexData[segmentIndex + 1].normal = normal;
+					meshData.vertexData[segmentIndex + 2].normal = normal;
+					meshData.vertexData[segmentIndex + 3].normal = normal;
 				}
 			}
 
-			unique_ptr<Model> bounds = ModelFunctions::getCircleBoundsXZ(mesh->getVertices(), mesh->getVertexCount());
+			unique_ptr<Model> bounds = ModelFunctions::getCircleBoundsXZ(meshData.vertexData, meshData.vertexCount);
+
+			mesh->releaseData();
 
 			unique_ptr<Entity> rock(new Entity);
 			setPosition(rock->getTransform(), position);
