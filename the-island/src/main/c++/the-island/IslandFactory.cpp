@@ -42,12 +42,13 @@ namespace theisland
 		Vector3 getSmoothNormal(MeshData& meshData, unsigned int x, unsigned int z);
 		void getTraversalIndices(unsigned int radius, unsigned int currentRadius, string axis, int direction,
 				unsigned int& beginIndexX, unsigned int& endIndexX, unsigned int& beginIndexZ, unsigned int& endIndexZ);
-		void growGrass(const MeshData& groundData, unsigned int vertexIndex);
+		void growGrass(const Triangle& ground);
 		void initializeMaps(vector<vector<float>>& heightMap, vector<vector<float>>& slopeMap, unsigned int edgeLength);
 		void setHeight(unsigned int radius, const vector<float>& profile, unsigned int x, unsigned int z,
 				vector<vector<float>>& heightMap, vector<vector<float>>& slopeMap, float heightFactor);
 		void smoothen(MeshData& meshData, unsigned int vertexIndex);
 
+		vector<Triangle> grassPositions;
 		vector<Vector3> rockPositions;
 		vector<Vector3> treePositions;
 
@@ -104,7 +105,8 @@ namespace theisland
 			}
 
 			// Grass!
-			//growGrass(meshData, vertexIndex);
+			grassPositions.push_back(Triangle(meshData[vertexIndex].position, meshData[vertexIndex + 1].position,
+					meshData[vertexIndex + 2].position));
 
 			// Trees!
 			if (getRandomBool(0.025f))
@@ -124,6 +126,12 @@ namespace theisland
 
 		void addFoliage()
 		{
+			for (Triangle& grassPosition : grassPositions)
+			{
+				growGrass(grassPosition);
+			}
+			grassPositions.clear();
+
 			for (Vector3& rockPosition : rockPositions)
 			{
 				RockFactory::createRock(rockPosition, getRandomFloat(0.25f, 0.75f));
@@ -534,7 +542,7 @@ namespace theisland
 			}
 		}
 
-		void growGrass(const MeshData& groundData, unsigned int vertexIndex)
+		void growGrass(const Triangle& ground)
 		{
 			unique_ptr<Entity> grass(new Entity);
 
@@ -549,30 +557,31 @@ namespace theisland
 			grassData.vertexCount = vertexCount;
 			grassData.indexCount = indexCount;
 
-			Vector3 center = (groundData[vertexIndex].position + groundData[vertexIndex + 1].position +
-					groundData[vertexIndex + 2].position) / 3.0f;
+			Vector3 center = (ground.getPointA() + ground.getPointB() + ground.getPointC()) / 3.0f;
 
 			for (unsigned int blade = 0; blade < blades; blade++)
 			{
 				Vector3 grassPosition = center;
-				for (unsigned int cornerIndex = vertexIndex; cornerIndex < vertexIndex + 3; cornerIndex++)
-				{
-					Vector3 toCorner = groundData[cornerIndex].position - grassPosition;
-					grassPosition += toCorner * getRandomFloat(0.0f, 1.0f);
-				}
+
+				Vector3 toPointA = ground.getPointA() - grassPosition;
+				grassPosition += toPointA * getRandomFloat(0.0f, 1.0f);
+				Vector3 toPointB = ground.getPointB() - grassPosition;
+				grassPosition += toPointB * getRandomFloat(0.0f, 1.0f);
+				Vector3 toPointC = ground.getPointC() - grassPosition;
+				grassPosition += toPointC * getRandomFloat(0.0f, 1.0f);
 
 				float saturation = getRandomFloat(0.25f, 0.75f);
 				float height = getRandomFloat(0.5f, 1.5f) * averageBladeHeight;
 				float angle = getRandomFloat(0.0f, 1.0f);
 
-				ModelFactory::insertTriangleVertices(grassData.vertexData, vertexCount,
+				ModelFactory::insertTriangleVertices(grassData.vertexData, blade * 3,
 						grassPosition + Vector3(0.0f, height, 0.0f),
 						Vector3(sin(angle) * height * 0.1f, -height, cos(angle) * height * 0.1f),
 						Vector3(-sin(angle) * height * 0.1f, -height, -cos(angle) * height * 0.1f),
 						Vector4(0.0f, saturation, 0.0f, 1.0f));
 
-				ModelFactory::insertTriangleIndices(grassData.indexData, 0, 0);
-				ModelFactory::insertTriangleIndices(grassData.indexData, indexCount, 0, true);
+				ModelFactory::insertTriangleIndices(grassData.indexData, blade * 6, blade * 3);
+				ModelFactory::insertTriangleIndices(grassData.indexData, blade * 6 + 3, blade * 3, true);
 			}
 
 			unique_ptr<Model> bounds = ModelFunctions::getCircleBoundsXZ(grassData.vertexData, grassData.vertexCount);
