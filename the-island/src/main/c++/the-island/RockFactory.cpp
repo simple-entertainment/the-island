@@ -23,31 +23,31 @@ namespace theisland
 {
 	namespace RockFactory
 	{
-		void createRock(const Vector3& position, float radius)
+		void createRock(const Vector3& position, shared_ptr<MeshBuffer> buffer, float radius, unsigned int detail)
 		{
-			unique_ptr<Mesh> mesh = ModelFactory::getInstance()->createSphereMesh(radius, 10, shared_ptr<MeshBuffer>(),
+			unique_ptr<Mesh> mesh = ModelFactory::getInstance()->createSphereMesh(radius, detail, buffer,
 					Vector4(0.6f, 0.6f, 0.6f, 1.0f), false);
 			MeshData& meshData = mesh->getData(false, true);
 
-			float variance[10][10];
-			for (unsigned int latitude = 0; latitude < 10; latitude++)
+			float variance[detail][detail];
+			for (unsigned int latitude = 0; latitude < detail; latitude++)
 			{
-				for (unsigned int longitude = 0; longitude < 10; longitude++)
+				for (unsigned int longitude = 0; longitude < detail; longitude++)
 				{
 					variance[latitude][longitude] = getRandomFloat(0.75f, 1.25f);
 				}
 			}
 
-			for (unsigned int latitude = 0; latitude < 10; latitude++)
+			for (unsigned int latitude = 0; latitude < detail; latitude++)
 			{
-				for (unsigned int longitude = 0; longitude < 10; longitude++)
+				for (unsigned int longitude = 0; longitude < detail; longitude++)
 				{
-					unsigned int segmentIndex = (latitude * 10 + longitude) * 4;
+					unsigned int segmentIndex = (latitude * detail + longitude) * 4;
 
 					meshData.vertexData[segmentIndex].position *= variance[latitude][longitude];
-					meshData.vertexData[segmentIndex + 1].position *= variance[(latitude + 1) % 10][longitude];
-					meshData.vertexData[segmentIndex + 2].position *= variance[(latitude + 1) % 10][(longitude + 1) % 10];
-					meshData.vertexData[segmentIndex + 3].position *= variance[latitude][(longitude + 1) % 10];
+					meshData.vertexData[segmentIndex + 1].position *= variance[(latitude + 1) % detail][longitude];
+					meshData.vertexData[segmentIndex + 2].position *= variance[(latitude + 1) % detail][(longitude + 1) % detail];
+					meshData.vertexData[segmentIndex + 3].position *= variance[latitude][(longitude + 1) % detail];
 
 					Vector3 edge0 = meshData.vertexData[segmentIndex + 1].position -
 							meshData.vertexData[segmentIndex].position;

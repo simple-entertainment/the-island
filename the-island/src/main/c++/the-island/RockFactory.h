@@ -25,7 +25,8 @@ namespace theisland
 {
 	namespace RockFactory
 	{
-		SIMPLE_API void createRock(const simplicity::Vector3& position, float radius);
+		SIMPLE_API void createRock(const simplicity::Vector3& position, std::shared_ptr<simplicity::MeshBuffer> buffer,
+				float radius, unsigned int detail);
 	}
 }
 
