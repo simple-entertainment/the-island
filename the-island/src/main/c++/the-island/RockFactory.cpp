@@ -27,7 +27,7 @@ namespace theisland
 		{
 			unique_ptr<Mesh> mesh = ModelFactory::getInstance()->createSphereMesh(radius, detail, buffer,
 					Vector4(0.6f, 0.6f, 0.6f, 1.0f), false);
-			MeshData& meshData = mesh->getData(false, true);
+			MeshData& meshData = mesh->getData(false);
 
 			float variance[detail][detail];
 			for (unsigned int latitude = 0; latitude < detail; latitude++)

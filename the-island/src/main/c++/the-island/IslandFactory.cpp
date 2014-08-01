@@ -133,7 +133,7 @@ namespace theisland
 			unsigned int foliageIndexCount = GRASS_BLADE_COUNT * 6 * grassPositions.size() +
 					pow(ROCK_DETAIL, 2) * 6 * rockPositions.size();
 			shared_ptr<MeshBuffer> foliageBuffer =
-					ModelFactory::getInstance()->createBuffer(foliageVertexCount, foliageIndexCount);
+					ModelFactory::getInstance()->createMeshBuffer(foliageVertexCount, foliageIndexCount);
 
 			for (Triangle& grassPosition : grassPositions)
 			{
@@ -185,9 +185,8 @@ namespace theisland
 			fillHeightMapSector(radius, profile, heightMap, slopeMap, "z", -1);
 			fillHeightMapSector(radius, profile, heightMap, slopeMap, "z", 1);
 
-			shared_ptr<MeshBuffer> buffer = ModelFactory::getInstance()->createBuffer(
-					pow(chunkSize, 2) * 6 * 10 * chunkCount, 0,
-					MeshBuffer::AccessHint::READ);
+			shared_ptr<MeshBuffer> buffer = ModelFactory::getInstance()->createMeshBuffer(
+					pow(chunkSize, 2) * 6 * 10 * chunkCount, 0, Buffer::AccessHint::READ);
 
 			for (unsigned int x = 0; x < edgeLength - 1; x += chunkSize)
 			{
@@ -197,7 +196,7 @@ namespace theisland
 
 					unique_ptr<Mesh> mesh = ModelFactory::getInstance()->createHeightMapMesh(heightMap, x,
 							x + chunkSize, z, z + chunkSize, buffer, Vector4(0.0f, 0.5f, 0.0f, 1.0f));
-					MeshData& meshData = mesh->getData(true, true);
+					MeshData& meshData = mesh->getData(true);
 
 					unsigned int initialVertexCount = meshData.vertexCount;
 					for (unsigned int vertexIndex = 0; vertexIndex < initialVertexCount; vertexIndex += 3)
@@ -564,7 +563,7 @@ namespace theisland
 			unsigned int indexCount = GRASS_BLADE_COUNT * 6;
 
 			unique_ptr<Mesh> mesh(new Mesh(buffer));
-			MeshData& grassData = mesh->getData(false, true);
+			MeshData& grassData = mesh->getData(false);
 			grassData.vertexCount = vertexCount;
 			grassData.indexCount = indexCount;
 

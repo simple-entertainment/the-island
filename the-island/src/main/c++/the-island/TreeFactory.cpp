@@ -82,7 +82,7 @@ namespace theisland
 		{
 			if (buffer == nullptr)
 			{
-				buffer = ModelFactory::getInstance()->createBuffer(VERTICES_IN_LEAF, INDICES_IN_LEAF);
+				buffer = ModelFactory::getInstance()->createMeshBuffer(VERTICES_IN_LEAF, INDICES_IN_LEAF);
 			}
 
 			// Copy the branch vertex data to a local vector... argggh!
@@ -94,7 +94,7 @@ namespace theisland
 			branch.releaseData();
 
 			unique_ptr<Mesh> leaf(new Mesh(buffer));
-			MeshData& leafData = leaf->getData(false, true);
+			MeshData& leafData = leaf->getData(false);
 
 			// Vertices
 			leafData.vertexCount = VERTICES_IN_LEAF;
@@ -194,11 +194,11 @@ namespace theisland
 		{
 			if (buffer == nullptr)
 			{
-				buffer = ModelFactory::getInstance()->createBuffer(VERTICES_IN_TRUNK, INDICES_IN_TRUNK);
+				buffer = ModelFactory::getInstance()->createMeshBuffer(VERTICES_IN_TRUNK, INDICES_IN_TRUNK);
 			}
 
 			unique_ptr<Mesh> trunk(new Mesh(buffer));
-			MeshData& trunkData = trunk->getData(false, true);
+			MeshData& trunkData = trunk->getData(false);
 
 			Vector4 color(0.47f, 0.24f, 0.0f, 1.0f);
 
@@ -280,7 +280,8 @@ namespace theisland
 		{
 			unsigned int vertexCount = VERTICES_IN_TRUNK * TRUNK_COUNT + VERTICES_IN_LEAF * TRUNK_COUNT;
 			unsigned int indexCount = INDICES_IN_TRUNK * TRUNK_COUNT + INDICES_IN_LEAF * TRUNK_COUNT;
-			shared_ptr<MeshBuffer> trunkBuffer = ModelFactory::getInstance()->createBuffer(vertexCount, indexCount);
+			shared_ptr<MeshBuffer> trunkBuffer =
+					ModelFactory::getInstance()->createMeshBuffer(vertexCount, indexCount);
 
 			trunks.reserve(TRUNK_COUNT);
 			for (unsigned int index = 0; index < TRUNK_COUNT; index++)
