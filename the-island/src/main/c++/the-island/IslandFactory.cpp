@@ -128,17 +128,17 @@ namespace theisland
 
 		void addFoliage()
 		{
-			unsigned int foliageVertexCount = GRASS_BLADE_COUNT * 3 * grassPositions.size() +
+			unsigned int foliageVertexCount = //GRASS_BLADE_COUNT * 3 * grassPositions.size() +
 					pow(ROCK_DETAIL + 1, 2) * 4 * rockPositions.size();
-			unsigned int foliageIndexCount = GRASS_BLADE_COUNT * 6 * grassPositions.size() +
+			unsigned int foliageIndexCount = //GRASS_BLADE_COUNT * 6 * grassPositions.size() +
 					pow(ROCK_DETAIL, 2) * 6 * rockPositions.size();
 			shared_ptr<MeshBuffer> foliageBuffer =
 					ModelFactory::getInstance()->createMeshBuffer(foliageVertexCount, foliageIndexCount);
 
-			for (Triangle& grassPosition : grassPositions)
+			/*for (Triangle& grassPosition : grassPositions)
 			{
 				growGrass(grassPosition, foliageBuffer);
-			}
+			}*/
 			grassPositions.clear();
 
 			for (Vector3& rockPosition : rockPositions)
@@ -194,8 +194,14 @@ namespace theisland
 				{
 					unique_ptr<Entity> chunk(new Entity(EntityCategories::GROUND));
 
+					// Chunk mesh:
 					unique_ptr<Mesh> mesh = ModelFactory::getInstance()->createHeightMapMesh(heightMap, x,
 							x + chunkSize, z, z + chunkSize, buffer, Vector4(0.0f, 0.5f, 0.0f, 1.0f));
+
+					// Full mesh:
+					//unique_ptr<Mesh> mesh = ModelFactory::getInstance()->createHeightMapMesh(heightMap, 0,
+					//		edgeLength - 1, 0, edgeLength - 1, buffer, Vector4(0.0f, 0.5f, 0.0f, 1.0f));
+
 					MeshData& meshData = mesh->getData(true);
 
 					unsigned int initialVertexCount = meshData.vertexCount;
